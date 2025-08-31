@@ -1,5 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react'
-import { Avatar, Button, Card } from '@heroui/react'
+import {Avatar, Button, Card, User} from '@heroui/react'
 import { LogOut } from 'lucide-react'
 
 export default function Index() {
@@ -12,7 +12,7 @@ export default function Index() {
 
   return (
     <div className="bg-white text-gray-900 min-h-screen">
-      <div className="mx-auto max-w-3xl px-6 py-5">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6">
         <div className="text-center">
           <Link href="/">
             <img
@@ -22,18 +22,18 @@ export default function Index() {
               loading="eager"
             />
           </Link>
-          <h1 className="mt-4 text-2xl font-bold">Личный кабинет</h1>
         </div>
 
-        <Card className="mt-8 p-6">
-          <div className="mt-4 space-y-3 text-gray-700 text-center">
-            <Avatar className="mx-auto" src={user?.avatar ?? undefined} name={user?.name ?? 'U'} size="lg"/>
-            <div><span className="font-medium">Имя:</span> {user?.name ?? '—'}</div>
-            <div><span className="font-medium">Email:</span> {user?.email ?? '—'}</div>
-          </div>
-
-          <div className="mt-6 flex justify-center">
-            <Button color="danger" onPress={handleLogout} startContent={<LogOut size={16}/>}>Выйти</Button>
+        <Card className="p-6">
+          <div className="flex justify-between items-center gap-3 ">
+              <User
+                  avatarProps={{
+                      src: user?.avatar,
+                  }}
+                  description={user?.email}
+                  name={user?.name}
+              />
+              <Button color="danger" onPress={handleLogout} startContent={<LogOut size={16}/>}>Выйти</Button>
           </div>
         </Card>
       </div>
