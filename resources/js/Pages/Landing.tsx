@@ -1,4 +1,6 @@
 import {Link} from "@inertiajs/react";
+import {Button, Card} from "@heroui/react";
+import {ArrowRight} from "lucide-react";
 
 export default function Landing() {
     return (
@@ -19,10 +21,7 @@ export default function Landing() {
                             Контролируйте свои расходы и достигайте финансовых целей.
                         </p>
                         <div className="mt-6 grid grid-cols-1 items-center justify-center gap-3 sm:flex sm:flex-row sm:gap-6">
-                            <a href="/lk"
-                               className="rounded-md bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                                Начать бесплатно
-                            </a>
+                            <Button as={Link} href="/lk" variant='bordered' color="primary" endContent={<ArrowRight size={16}/>}>Начать бесплатно</Button>
                         </div>
                     </div>
                 </div>
@@ -41,18 +40,18 @@ export default function Landing() {
 
                     <div className="mx-auto mt-16 max-w-6xl">
                         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
-                            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                            <Card className="p-6">
                                 <dt className="text-base font-semibold">Учет расходов</dt>
                                 <dd className="mt-2 text-sm text-gray-600">Записывайте все траты и следите за балансом.</dd>
-                            </div>
-                            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                            </Card>
+                            <Card className="p-6">
                                 <dt className="text-base font-semibold">Категории и отчеты</dt>
                                 <dd className="mt-2 text-sm text-gray-600">Анализируйте расходы по категориям.</dd>
-                            </div>
-                            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                            </Card>
+                            <Card className="p-6">
                                 <dt className="text-base font-semibold">Планирование бюджета</dt>
                                 <dd className="mt-2 text-sm text-gray-600">Ставьте финансовые цели и достигайте их.</dd>
-                            </div>
+                            </Card>
                         </div>
 
                     </div>
@@ -63,12 +62,6 @@ export default function Landing() {
                 <div className="mx-auto max-w-6xl px-6 py-8 sm:py-10">
                     <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
                         <p className="text-center text-sm text-gray-500">© {new Date().getFullYear()} ТранжироМер. Все права защищены.</p>
-                        <div className="flex items-center gap-6 text-sm text-gray-500">
-                            <a href="/lk"
-                               className="rounded-md bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                                Начать бесплатно
-                            </a>
-                        </div>
                     </div>
                 </div>
             </footer>

@@ -1,4 +1,6 @@
 import { Link } from '@inertiajs/react'
+import { Button, Card } from '@heroui/react'
+import { ArrowLeft, LogIn } from 'lucide-react'
 
 export default function Login() {
   return (
@@ -18,18 +20,11 @@ export default function Login() {
           <p className="mt-2 text-sm text-gray-600">Выберите удобный способ авторизации</p>
 
           <div className="mt-8 space-y-3">
-            <a
-              href="/auth/yandex/redirect"
-              className="flex w-full items-center justify-center gap-2 rounded-md bg-[#ffcc00] px-4 py-2.5 text-sm font-semibold text-black shadow-sm hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffcc00]"
-            >
-              Войти через Яндекс ID
-            </a>
+            <Button as="a" href="/auth/yandex/redirect" className="w-full bg-[#ffcc00] text-black hover:opacity-90" startContent={<LogIn size={16}/>}>Войти через Яндекс ID</Button>
           </div>
 
           <div className="mt-8">
-            <Link href="/" className="text-sm text-gray-600 hover:text-gray-900">
-              ← На главную
-            </Link>
+            <Button as={Link} href="/" variant="light" startContent={<ArrowLeft size={16}/>}>На главную</Button>
           </div>
         </div>
       </div>
