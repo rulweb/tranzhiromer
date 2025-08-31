@@ -67,11 +67,10 @@ export default function Index({ upcomingPayments = [] as Upcoming[] }: { upcomin
             ))}
           </div>
 
-          {upcomingPayments.length > 0 && (
-            <div className="mt-4 text-right">
-              <Button as={Link} href="/lk/income-cycles" variant="flat" color="primary">Перейти к циклам</Button>
-            </div>
-          )}
+          <div className="mt-4 flex items-center justify-end gap-2">
+            <Button as={Link} href="/lk/income-cycles" variant="flat">К циклам</Button>
+            <Button as={Link} href={`/lk/planning?month=${new Date().toISOString().slice(0,7)}`} color="primary">Редактировать планы</Button>
+          </div>
         </Card>
       </div>
     </div>

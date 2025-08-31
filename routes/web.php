@@ -14,6 +14,7 @@ Route::middleware('web')->group(function () {
     // Income cycles & templates & mandatory payments
     Route::get('/lk/income-cycle-templates', [\App\Http\Controllers\Lk\IncomeCycleTemplatesController::class, 'index'])->middleware('auth')->name('lk.income-cycle-templates.index');
     Route::get('/lk/income-cycles', [\App\Http\Controllers\Lk\IncomeCyclesController::class, 'index'])->middleware('auth')->name('lk.income-cycles.index');
+    Route::patch('/lk/income-cycles/{id}', [\App\Http\Controllers\Lk\IncomeCyclesController::class, 'update'])->middleware('auth')->name('lk.income-cycles.update');
     Route::post('/lk/income-cycles/bootstrap', [\App\Http\Controllers\Lk\IncomeCyclesController::class, 'bootstrap'])->middleware('auth')->name('lk.income-cycles.bootstrap');
     Route::get('/lk/mandatory-payments', [\App\Http\Controllers\Lk\MandatoryPaymentsController::class, 'index'])->middleware('auth')->name('lk.mandatory-payments.index');
     Route::post('/lk/mandatory-payments', [\App\Http\Controllers\Lk\MandatoryPaymentsController::class, 'store'])->middleware('auth')->name('lk.mandatory-payments.store');
@@ -21,6 +22,10 @@ Route::middleware('web')->group(function () {
     // Allocations
     Route::patch('/lk/allocations/{id}', [\App\Http\Controllers\Lk\PaymentAllocationsController::class, 'update'])->middleware('auth')->name('lk.allocations.update');
     Route::post('/lk/allocations/{id}/move', [\App\Http\Controllers\Lk\PaymentAllocationsController::class, 'move'])->middleware('auth')->name('lk.allocations.move');
+
+    // Planning
+    Route::get('/lk/planning', [\App\Http\Controllers\Lk\PlanningController::class, 'index'])->middleware('auth')->name('lk.planning.index');
+    Route::post('/lk/planning/one-off', [\App\Http\Controllers\Lk\PlanningController::class, 'createOneOff'])->middleware('auth')->name('lk.planning.one-off');
 
     // Social auth
     Route::get('/auth/{provider}/redirect', [\App\Http\Controllers\SocialAuthController::class, 'redirect'])

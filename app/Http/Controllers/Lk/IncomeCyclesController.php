@@ -34,6 +34,22 @@ class IncomeCyclesController extends Controller
         ]);
     }
 
+    public function update(Request $request, int $id): RedirectResponse
+    {
+        $user = $request->user();
+        $cycle = IncomeCycle::query()->where('user_id', $user->id)->findOrFail($id);
+
+        $data = $request->validate([
+            'planned_amount' => ['nullable', 'numeric', 'min:0'],
+            'expected_day' => ['nullable', 'integer', 'between:1,31'],
+        ]);
+
+        $cycle->fill($data);
+        $cycle->save();
+
+        return back()->with('success', 'Доход обновлён');
+    }
+
     public function bootstrap(Request $request): RedirectResponse
     {
         $user = $request->user();
