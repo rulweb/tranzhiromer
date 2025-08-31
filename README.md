@@ -1,61 +1,102 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ТранжироМер
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Простое и наглядное приложение для домашней бухгалтерии: учет расходов и доходов, категории и отчеты, базовое планирование бюджета. Фронтенд на React через Inertia v2, UI — HeroUI, стили — Tailwind CSS v4. Авторизация через социальные сети (VK ID, Яндекс) через Laravel Socialite.
 
-## About Laravel
+[Обновлено: 2025‑09‑01]
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Стек и версии
+- PHP: 8.2+
+- Laravel: 12.x
+- Inertia (Laravel + React): v2
+- React: 19
+- Vite: 7
+- Tailwind CSS: v4 (подключение через `@import 'tailwindcss'`)
+- UI: `@heroui/react` (+ Tailwind плагин)
+- Иконки: `lucide-react`
+- Уведомления: `sonner` (Toaster подключен глобально)
+- Даты: `dayjs` (локаль ru, plugin duration)
+- Тесты: Pest v4
+- Docker / Dev: Laravel Sail (опционально), Pail логгер
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Основные возможности
+- Лендинг: `/` (Inertia страница `Landing`)
+- Личный кабинет: `/lk` (Inertia страница `Lk/Index`, доступна после входа)
+- Вход: `/lk/login`
+- Соц. авторизация: `/auth/{provider}/redirect` и `/auth/{provider}/callback`, где `{provider}` ∈ {`vkid`, `yandex`}
+- Выход: `POST /logout`
 
-## Learning Laravel
+## Структура проекта (основное)
+- `app/Http/Controllers/LandingController.php` — лендинг
+- `app/Http/Controllers/SocialAuthController.php` — вход через VK ID и Яндекс (Socialite)
+- `routes/web.php` — маршруты Inertia и авторизации
+- `resources/js/app.tsx` — точка входа фронтенда (Inertia, HeroUIProvider, Toaster, dayjs)
+- `resources/js/Pages/` — страницы Inertia (`Landing.tsx`, `Lk/Index.tsx`, др.)
+- `resources/css/app.css` — Tailwind v4 (`@import 'tailwindcss'`, HeroUI плагин)
+- `vite.config.js` — Vite + React + Tailwind v4 plugin + tsconfig paths
+- `postcss.config.js` — `@tailwindcss/postcss`
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Быстрый старт (локально, без Docker)
+1. Установить зависимости PHP и Node:
+   - `composer install`
+   - `npm install`
+2. Создать `.env` и сгенерировать ключ:
+   - `cp .env.example .env`
+   - `php artisan key:generate`
+3. (Опционально) настроить БД и выполнить миграции:
+   - Обновите переменные подключения в `.env`
+   - `php artisan migrate`
+4. Запуск режима разработки (варианты):
+   - Отдельно: в одном терминале `php artisan serve`, в другом — `npm run dev`
+   - Или одной командой: `composer run dev` (конкурентный запуск сервера, очереди, логгера pail и Vite)
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Откройте приложение по адресу, который выведет `php artisan serve` (обычно http://127.0.0.1:8000).
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Запуск через Docker (Laravel Sail)
+1. Установите зависимости: `composer install`
+2. Подготовьте окружение: `cp .env.example .env` и настройте БД (Sail по умолчанию использует MySQL)
+3. Поднимите контейнеры: `./vendor/bin/sail up -d`
+4. Выполните миграции: `./vendor/bin/sail artisan migrate`
+5. Запустите фронтенд в контейнере (в новом терминале): `./vendor/bin/sail npm run dev`
 
-## Laravel Sponsors
+Откройте http://localhost (или порт из docker-compose.yml, если переопределён).
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Переменные окружения (соц. вход)
+Для VK ID и Яндекс авторизации добавьте в `.env` необходимые ключи (см. документацию Socialite и провайдеров):
+- VK ID: `VKID_CLIENT_ID`, `VKID_CLIENT_SECRET`, `VKID_REDIRECT_URI`
+- Яндекс: `YANDEX_CLIENT_ID`, `YANDEX_CLIENT_SECRET`, `YANDEX_REDIRECT_URI`
 
-### Premium Partners
+Маршруты редиректа/колбэка уже настроены в `routes/web.php`:
+- `GET /auth/vkid/redirect` → VK ID
+- `GET /auth/yandex/redirect` → Яндекс
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Контроллер `SocialAuthController` создаёт/обновляет пользователя на основе данных сервиса. Если провайдер не возвращает email, генерируется синтетический (`vk_...@vk.local`, `yandex_...@yandex.local`).
 
-## Contributing
+## Команды
+- Backend
+  - Запуск dev: `composer run dev`
+  - Тесты: `php artisan test`
+- Frontend
+  - Dev сервер: `npm run dev`
+  - Сборка: `npm run build`
+  - Типизация: `npm run typecheck`
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Тестирование
+- Запустить все тесты: `php artisan test`
+- Рекомендуется фильтровать по файлу/именам тестов при разработке (см. Pest v4)
 
-## Code of Conduct
+## Сборка на продакшен
+1. `npm run build` (Vite соберёт ассеты в `public/build`)
+2. Убедитесь, что сконфигурированы ключи окружения и база данных
+3. Выполните миграции: `php artisan migrate --force`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Примечания по фронтенду
+- Inertia страницы находятся в `resources/js/Pages`. Навигация — через `<Link>` и `router.visit`.
+- Tailwind v4 подключается через CSS: `@import 'tailwindcss';` (см. `resources/css/app.css`).
+- HeroUI и его Tailwind плагин подключены в `app.css` (`@plugin './hero.ts'`).
+- Toaster из `sonner` и провайдер HeroUI подключены в `resources/js/app.tsx` глобально.
+- Даты: `dayjs` (локаль RU + `duration`).
 
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Лицензия
+MIT (как в Laravel skeleton).
