@@ -14,12 +14,13 @@ class DashboardController extends Controller
         $user = $request->user();
 
         // For now, reuse Schedules upcoming logic: fetch last 50 schedules from user's groups
-        $groupIds = \App\Models\Group::query()
+        $currentGroupId = $user->current_group_id ?? \App\Models\Group::query()
             ->whereHas('members', fn ($q) => $q->where('user_id', $user->id))
-            ->pluck('id');
+            ->orderBy('id')
+            ->value('id');
 
         $schedules = \App\Models\Schedule::query()
-            ->whereIn('group_id', $groupIds)
+            ->where('group_id', $currentGroupId)
             ->with('parent')
             ->latest('id')
             ->limit(100)

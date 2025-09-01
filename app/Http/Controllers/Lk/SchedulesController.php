@@ -27,7 +27,7 @@ class SchedulesController extends Controller
                 ->whereHas('members', fn ($q) => $q->where('user_id', $user->id))
                 ->orderBy('id')
                 ->value('id');
-            $validated['group_id'] = $firstGroupId;
+            $validated['group_id'] = $user->current_group_id ?? $firstGroupId;
         }
 
         $group = Group::findOrFail((int) $validated['group_id']);

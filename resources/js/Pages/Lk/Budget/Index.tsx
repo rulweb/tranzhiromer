@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useState} from 'react'
-import {Head, router} from '@inertiajs/react'
+import {Head, router, usePage} from '@inertiajs/react'
 import dayjs from 'dayjs'
 import {Button} from '@heroui/react'
 import LkLayout from '../../../Layouts/LkLayout'
@@ -14,15 +14,29 @@ export default function BudgetIndex({ schedules: initial, month: initialMonth, g
   const [month, setMonth] = useState<string>(initialMonth || dayjs().format('YYYY-MM'))
   const [moveOpen, setMoveOpen] = useState(false)
   const [movingExpense, setMovingExpense] = useState<Schedule | null>(null)
+  const page = usePage()
+  const currentGroupId = (page.props as any)?.auth?.currentGroup?.id ?? null
 
+  // Keep schedules in sync with server props when they change
   useEffect(() => {
-    // refetch via Inertia when month changes
+    setSchedules(initial)
+  }, [initial])
+
+  // Refetch via Inertia when month changes (for the same group)
+  useEffect(() => {
     if (groupId) {
       router.visit(`/lk/budget?group_id=${groupId}&month=${month}`, { preserveScroll: true, preserveState: true })
     } else {
       router.visit(`/lk/budget?month=${month}`, { preserveScroll: true, preserveState: true })
     }
   }, [month])
+
+  // React to current group switching from layout: reload budget for the new group
+  useEffect(() => {
+    if (currentGroupId && groupId !== currentGroupId) {
+      router.visit(`/lk/budget?group_id=${currentGroupId}&month=${month}`, { preserveScroll: true, preserveState: false })
+    }
+  }, [currentGroupId])
 
   const incomes = useMemo(() => schedules.filter(s => s.type === 'income'), [schedules])
   const expensesByParent = useMemo(() => {

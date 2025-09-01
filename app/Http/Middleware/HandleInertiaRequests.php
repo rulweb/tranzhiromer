@@ -35,10 +35,30 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $groups = [];
+        $currentGroup = null;
+        if ($user) {
+            $groups = \App\Models\Group::query()
+                ->select(['id', 'name', 'owner_id'])
+                ->whereHas('members', fn ($q) => $q->where('user_id', $user->id))
+                ->orderBy('name')
+                ->get();
+            if ($user->current_group_id) {
+                $currentGroup = $groups->firstWhere('id', $user->current_group_id);
+            }
+            if (! $currentGroup && $groups->count() > 0) {
+                $currentGroup = $groups->first();
+            }
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => fn () => $request->user()?->only(['id', 'name', 'email', 'avatar']),
+                'user' => fn () => $user?->only(['id', 'name', 'email', 'avatar', 'current_group_id']),
+                'groups' => fn () => $groups,
+                'currentGroup' => fn () => $currentGroup,
+                'currentGroupMembers' => fn () => $currentGroup ? \App\Models\Group::with('members')->find($currentGroup->id)?->members->map->only(['id', 'name', 'email']) : [],
             ],
         ];
     }

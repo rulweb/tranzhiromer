@@ -35,6 +35,10 @@ Route::middleware('web')->group(function () {
         Route::post('corrections', [\App\Http\Controllers\Lk\CorrectionsController::class, 'store'])->name('lk.corrections.store');
         Route::patch('corrections/{correction}', [\App\Http\Controllers\Lk\CorrectionsController::class, 'update'])->name('lk.corrections.update');
 
-        Route::get('groups', [\App\Http\Controllers\Lk\GroupsController::class, 'index'])->name('lk.groups.index');
+        Route::post('groups', [\App\Http\Controllers\Lk\GroupsController::class, 'store'])->name('lk.groups.store');
+        Route::post('groups/current', [\App\Http\Controllers\Lk\GroupsController::class, 'setCurrent'])->name('lk.groups.set-current');
+        Route::patch('groups/{group}', [\App\Http\Controllers\Lk\GroupsController::class, 'update'])->name('lk.groups.update');
+        Route::delete('groups/{group}/members/{user}', [\App\Http\Controllers\Lk\GroupsController::class, 'removeMember'])->name('lk.groups.members.remove');
+        Route::post('groups/{group}/invite', [\App\Http\Controllers\Lk\GroupsController::class, 'invite'])->name('lk.groups.invite');
     });
 });
