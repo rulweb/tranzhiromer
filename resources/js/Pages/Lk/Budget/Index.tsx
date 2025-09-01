@@ -7,6 +7,58 @@ import IncomeGroup from '../../../Components/IncomeGroup'
 import MoveExpenseModal from '../../../Components/MoveExpenseModal'
 import {Schedule} from "@/types";
 
+function nextDueDate(s: Schedule): dayjs.Dayjs | null {
+  const today = dayjs().startOf('day')
+
+  if (s.period_type === 'one_time') {
+    if (!s.single_date) {
+      return null
+    }
+    const d = dayjs(s.single_date)
+    return d.isBefore(today) ? null : d
+  }
+
+  const end = s.end_date ? dayjs(s.end_date).endOf('day') : null
+
+  if (s.period_type === 'daily') {
+    const d = today
+    if (end && d.isAfter(end)) {
+      return null
+    }
+    return d
+  }
+
+  if (s.period_type === 'weekly') {
+    if (typeof s.day_of_week !== 'number') {
+      return null
+    }
+    let d = today
+    const delta = (s.day_of_week - d.day() + 7) % 7
+    d = d.add(delta, 'day')
+    if (end && d.isAfter(end)) {
+      return null
+    }
+    return d
+  }
+
+  if (s.period_type === 'monthly') {
+    if (typeof s.day_of_month !== 'number') {
+      return null
+    }
+    let d = today.date(Math.min(s.day_of_month, today.daysInMonth()))
+    if (d.isBefore(today)) {
+      const nextMonth = today.add(1, 'month')
+      d = nextMonth.date(Math.min(s.day_of_month, nextMonth.daysInMonth()))
+    }
+    if (end && d.isAfter(end)) {
+      return null
+    }
+    return d
+  }
+
+  return null
+}
+
 type Props = { schedules: Schedule[]; month: string }
 
 export default function BudgetIndex({ schedules: initial, month: initialMonth }: Props) {
