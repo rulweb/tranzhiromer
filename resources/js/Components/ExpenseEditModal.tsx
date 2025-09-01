@@ -1,5 +1,6 @@
 import {
 	Button,
+	DatePicker,
 	Input,
 	Modal,
 	ModalBody,
@@ -11,9 +12,12 @@ import {
 	Textarea
 } from '@heroui/react'
 import { Form, router } from '@inertiajs/react'
+import { type DateValue, parseDate } from '@internationalized/date'
+import { normalizeToCalendarDate } from '@/utils/date'
 import { useEffect, useMemo, useState } from 'react'
 
 import { Schedule } from '../types'
+
 import ConfirmDeleteModal from './ConfirmDeleteModal'
 
 const iconOptions = [
@@ -43,11 +47,15 @@ export default function ExpenseEditModal({
 		'daily' | 'weekly' | 'monthly' | 'one_time'
 	>('monthly')
 	const [confirmOpen, setConfirmOpen] = useState(false)
+	const [singleDate, setSingleDate] = useState<DateValue | null>(null)
+	const [endDate, setEndDate] = useState<DateValue | null>(null)
 
 	useEffect(() => {
 		if (expense) {
 			setIcon(expense.icon || '')
 			setPeriodType(expense.period_type)
+   setSingleDate(normalizeToCalendarDate(expense.single_date))
+			setEndDate(normalizeToCalendarDate(expense.end_date))
 		}
 	}, [expense])
 
@@ -174,12 +182,18 @@ export default function ExpenseEditModal({
 										/>
 									)}
 									{periodFields === 'one_time' && (
-										<Input
-											name='single_date'
-											type='date'
-											label='Дата'
-											defaultValue={expense.single_date || ''}
-										/>
+										<>
+											<DatePicker
+												label='Дата'
+												value={singleDate ?? undefined}
+												onChange={setSingleDate}
+											/>
+											<input
+												type='hidden'
+												name='single_date'
+												value={singleDate ? singleDate.toString() : ''}
+											/>
+										</>
 									)}
 									{periodFields === 'daily' && (
 										<Input
@@ -190,12 +204,18 @@ export default function ExpenseEditModal({
 										/>
 									)}
 									{periodFields !== 'one_time' && (
-										<Input
-											name='end_date'
-											type='date'
-											label='Дата окончания'
-											defaultValue={expense.end_date || ''}
-										/>
+										<>
+											<DatePicker
+												label='Дата окончания'
+												value={endDate ?? undefined}
+												onChange={setEndDate}
+											/>
+											<input
+												type='hidden'
+												name='end_date'
+												value={endDate ? endDate.toString() : ''}
+											/>
+										</>
 									)}
 								</ModalBody>
 								<ModalFooter>
@@ -207,17 +227,19 @@ export default function ExpenseEditModal({
 										Отмена
 									</Button>
 									<div className='flex-1' />
-   						<Button
-   							color='danger'
-   							variant='bordered'
-   							onPress={() => {
-   								if (processing) { return }
-   								setConfirmOpen(true)
-   							}}
-   							disabled={processing}
-   						>
-   							Удалить
-   						</Button>
+									<Button
+										color='danger'
+										variant='bordered'
+										onPress={() => {
+											if (processing) {
+												return
+											}
+											setConfirmOpen(true)
+										}}
+										disabled={processing}
+									>
+										Удалить
+									</Button>
 									<Button
 										color='primary'
 										type='submit'

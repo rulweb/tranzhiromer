@@ -7,11 +7,14 @@ import {
 	ModalFooter,
 	ModalHeader,
 	Select,
-	SelectItem,
-	Textarea
+ SelectItem,
+	Textarea,
+	DatePicker
 } from '@heroui/react'
 import { Form, router } from '@inertiajs/react'
 import { useEffect, useMemo, useState } from 'react'
+import { parseDate, type DateValue } from '@internationalized/date'
+import { normalizeToCalendarDate } from '@/utils/date'
 
 import { Schedule } from '../types'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
@@ -43,11 +46,15 @@ export default function IncomeEditModal({
 		'daily' | 'weekly' | 'monthly' | 'one_time'
 	>('monthly')
 	const [confirmOpen, setConfirmOpen] = useState(false)
+	const [singleDate, setSingleDate] = useState<DateValue | null>(null)
+	const [endDate, setEndDate] = useState<DateValue | null>(null)
 
-	useEffect(() => {
+ useEffect(() => {
 		if (income) {
 			setIcon(income.icon || '')
 			setPeriodType(income.period_type)
+   setSingleDate(normalizeToCalendarDate(income.single_date))
+			setEndDate(normalizeToCalendarDate(income.end_date))
 		}
 	}, [income])
 
@@ -172,13 +179,11 @@ export default function IncomeEditModal({
 											}
 										/>
 									)}
-									{periodFields === 'one_time' && (
-										<Input
-											name='single_date'
-											type='date'
-											label='Дата'
-											defaultValue={income.single_date || ''}
-										/>
+         {periodFields === 'one_time' && (
+										<>
+											<DatePicker label='Дата' value={singleDate ?? undefined} onChange={setSingleDate} />
+											<input type='hidden' name='single_date' value={singleDate ? singleDate.toString() : ''} />
+										</>
 									)}
 									{periodFields === 'daily' && (
 										<Input
@@ -188,13 +193,11 @@ export default function IncomeEditModal({
 											defaultValue={income.time_of_day || ''}
 										/>
 									)}
-									{periodFields !== 'one_time' && (
-										<Input
-											name='end_date'
-											type='date'
-											label='Дата окончания'
-											defaultValue={income.end_date || ''}
-										/>
+         {periodFields !== 'one_time' && (
+										<>
+											<DatePicker label='Дата окончания' value={endDate ?? undefined} onChange={setEndDate} />
+											<input type='hidden' name='end_date' value={endDate ? endDate.toString() : ''} />
+										</>
 									)}
 								</ModalBody>
 								<ModalFooter>

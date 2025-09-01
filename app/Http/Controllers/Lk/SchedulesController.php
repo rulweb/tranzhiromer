@@ -34,7 +34,7 @@ class SchedulesController extends Controller
             $time = Carbon::createFromFormat('Y-m', $month);
 
             $query->where(function ($q) use ($time) {
-                $q->whereBetween('end_date', [$time->startOfMonth()->toAtomString(), $time->endOfMonth()->toAtomString()]);
+                $q->whereDate('end_date', '>', $time->startOfMonth()->toAtomString());
                 $q->orWhereNull('end_date');
             });
         }

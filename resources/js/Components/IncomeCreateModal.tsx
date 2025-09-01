@@ -8,10 +8,12 @@ import {
 	ModalHeader,
 	Select,
 	SelectItem,
-	Textarea
+	Textarea,
+	DatePicker
 } from '@heroui/react'
 import { Form, router } from '@inertiajs/react'
 import { useMemo, useState } from 'react'
+import { parseDate, type DateValue } from '@internationalized/date'
 
 const iconOptions = [
 	'home',
@@ -39,6 +41,8 @@ export default function IncomeCreateModal({
 	const [periodType, setPeriodType] = useState<
 		'daily' | 'weekly' | 'monthly' | 'one_time'
 	>('monthly')
+	const [singleDate, setSingleDate] = useState<DateValue | null>(null)
+	const [endDate, setEndDate] = useState<DateValue | null>(null)
 
 	const periodFields = useMemo(() => {
 		if (periodType === 'weekly') {
@@ -151,12 +155,11 @@ export default function IncomeCreateModal({
 											label='День месяца'
 										/>
 									)}
-									{periodFields === 'one_time' && (
-										<Input
-											name='single_date'
-											type='date'
-											label='Дата'
-										/>
+         {periodFields === 'one_time' && (
+										<>
+											<DatePicker label='Дата' value={singleDate ?? undefined} onChange={setSingleDate} />
+											<input type='hidden' name='single_date' value={singleDate ? singleDate.toString() : ''} />
+										</>
 									)}
 									{periodFields === 'daily' && (
 										<Input
@@ -165,12 +168,11 @@ export default function IncomeCreateModal({
 											label='Время'
 										/>
 									)}
-									{periodFields !== 'one_time' && (
-										<Input
-											name='end_date'
-											type='date'
-											label='Дата окончания'
-										/>
+         {periodFields !== 'one_time' && (
+										<>
+											<DatePicker label='Дата окончания' value={endDate ?? undefined} onChange={setEndDate} />
+											<input type='hidden' name='end_date' value={endDate ? endDate.toString() : ''} />
+										</>
 									)}
 								</ModalBody>
 								<ModalFooter>
