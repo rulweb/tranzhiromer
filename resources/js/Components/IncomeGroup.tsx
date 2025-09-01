@@ -1,5 +1,6 @@
-import { Button, Card, CardBody, CardHeader } from '@heroui/react'
+import { Button, Card, CardBody, CardHeader, Popover, PopoverContent, PopoverTrigger } from '@heroui/react'
 import dayjs from 'dayjs'
+import { Info } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 // import AddExpenseForm from './AddExpenseForm'
@@ -67,6 +68,26 @@ export type IncomeGroupProps = {
 	onMoveExpense?: (s: Schedule) => void
 }
 
+function formatPeriodicity(s: Schedule): string {
+	const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+	if (s.period_type === 'one_time') {
+		const d = s.single_date ? dayjs(s.single_date) : null
+		return d ? `Разово — ${d.format('D MMMM YYYY')}` : 'Разово'
+	}
+	if (s.period_type === 'daily') {
+		return `Ежедневно${s.time_of_day ? ` в ${s.time_of_day}` : ''}`
+	}
+	if (s.period_type === 'weekly') {
+		const w = typeof s.day_of_week === 'number' ? days[s.day_of_week] : ''
+		return `Еженедельно${w ? ` по ${w}` : ''}`
+	}
+	if (s.period_type === 'monthly') {
+		const d = typeof s.day_of_month === 'number' ? s.day_of_month : null
+		return `Ежемесячно${d ? `, ${d} числа` : ''}`
+	}
+	return ''
+}
+
 export default function IncomeGroup({
 	income,
 	expenses,
@@ -85,7 +106,50 @@ export default function IncomeGroup({
 		<Card>
 			<CardHeader className='flex items-center justify-between'>
 				<div>
-					<div className='text-base font-semibold'>{income.name}</div>
+					<div className='flex flex-col'>
+						<div className='flex items-center gap-2'>
+							<div className='text-base font-semibold'>{income.name}</div>
+							{/* Mobile only popover */}
+							<div className='sm:hidden'>
+								<Popover placement='bottom-start'>
+									<PopoverTrigger>
+										<Button isIconOnly size='sm' variant='light' aria-label='Подробнее'>
+											<Info size={16} />
+										</Button>
+									</PopoverTrigger>
+									<PopoverContent className='max-w-sm'>
+										<div className='text-sm'>
+											<div className='font-semibold mb-1'>{income.name}</div>
+											<div className='text-xs text-gray-600'>
+												Периодичность: {formatPeriodicity(income)}
+											</div>
+											{income.end_date && (
+												<div className='text-xs text-gray-600 mt-1'>
+													До: {dayjs(income.end_date).format('D MMMM YYYY')}
+												</div>
+											)}
+											<div className='mt-2'>
+												<div className='text-xs uppercase text-gray-500'>Описание</div>
+												<div className='text-sm'>
+													{income.description ? income.description : '—'}
+												</div>
+											</div>
+										</div>
+									</PopoverContent>
+								</Popover>
+							</div>
+							{/* Desktop: periodicity inline between name and amount */}
+							<div className='hidden sm:block text-xs text-gray-600'>
+								{formatPeriodicity(income)}
+							</div>
+						</div>
+						{/* Desktop: description under the name */}
+						{income.description && (
+							<div className='hidden sm:block text-xs text-gray-500 mt-1'>
+								{income.description}
+							</div>
+						)}
+					</div>
 					<div className='text-xs text-gray-500'>
 						Доход: {Number(income.amount).toLocaleString('ru-RU')} ₽
 					</div>
