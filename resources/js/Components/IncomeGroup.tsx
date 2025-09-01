@@ -8,7 +8,7 @@ import {
 	PopoverTrigger
 } from '@heroui/react'
 import dayjs from 'dayjs'
-import { Info } from 'lucide-react'
+import { Info, Pencil } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 // import AddExpenseForm from './AddExpenseForm'
@@ -186,11 +186,13 @@ export default function IncomeGroup({
 					</div>
 					{onEditIncome && (
 						<Button
+							isIconOnly
 							size='sm'
 							variant='light'
 							onPress={() => onEditIncome(income)}
+							aria-label='edit'
 						>
-							Редактировать
+							<Pencil size={16} />
 						</Button>
 					)}
 					<Button

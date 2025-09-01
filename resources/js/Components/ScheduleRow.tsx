@@ -51,12 +51,14 @@ export default function ScheduleRow({
 	const end = schedule.end_date ? dayjs(schedule.end_date) : null
 	return (
 		<Card>
-			<CardBody className='flex flex-row items-center justify-between p-3 sm:p-4'>
-				<div className='flex items-center gap-3'>
-					<ScheduleIcon
-						icon={schedule.icon}
-						className='w-6 h-6'
-					/>
+			<CardBody className='flex flex-row items-center justify-between p-3 sm:p-4 gap-0'>
+				<div className='flex items-center gap-2'>
+					<div className='hidden lg:block'>
+						<ScheduleIcon
+							icon={schedule.icon}
+							className='w-6 h-6'
+						/>
+					</div>
 					<div>
 						<div className='flex items-center'>
 							<span className='font-medium'>{schedule.name}</span>
@@ -103,14 +105,8 @@ export default function ScheduleRow({
 						</div>
 					</div>
 				</div>
-				<div className='flex items-center gap-4'>
+				<div className='flex items-center gap-2'>
 					<div className='flex flex-col items-end'>
-						{isExpense && schedule.expected_leftover != null && (
-							<div className='text-xs text-gray-600'>
-								Остаток:{' '}
-								{Number(schedule.expected_leftover).toLocaleString('ru-RU')} ₽
-							</div>
-						)}
 						<div
 							className={
 								'text-sm font-semibold ' +
@@ -118,8 +114,13 @@ export default function ScheduleRow({
 							}
 						>
 							{isExpense ? '-' : '+'}
-							{Number(schedule.amount).toLocaleString('ru-RU')}
+							{Number(schedule.amount).toLocaleString('ru-RU')} ₽
 						</div>
+						{isExpense && schedule.expected_leftover != null && (
+							<div className='text-xs text-gray-600'>
+								{Number(schedule.expected_leftover).toLocaleString('ru-RU')} ₽
+							</div>
+						)}
 						{/* Paid status */}
 						{isExpense && (
 							<div className='flex items-center gap-1 text-xs'>
@@ -137,37 +138,41 @@ export default function ScheduleRow({
 							</div>
 						)}
 					</div>
-					{isExpense && !schedule.is_paid && (
-						<Button
-							size='sm'
-							variant='flat'
-							onPress={() => onPaid?.(schedule)}
-						>
-							Оплатить
-						</Button>
-					)}
-					{onMove && (
-						<Button
-							isIconOnly
-							size='sm'
-							variant='flat'
-							onPress={() => onMove(schedule)}
-							aria-label='move'
-						>
-							<MoveVertical size={16} />
-						</Button>
-					)}
-					{onEdit && (
-						<Button
-							isIconOnly
-							size='sm'
-							variant='flat'
-							onPress={() => onEdit(schedule)}
-							aria-label='edit'
-						>
-							<Pencil size={16} />
-						</Button>
-					)}
+					<div className='flex flex-col items-center gap-2'>
+						{isExpense && !schedule.is_paid && (
+							<Button
+								size='sm'
+								variant='flat'
+								onPress={() => onPaid?.(schedule)}
+							>
+								Оплатить
+							</Button>
+						)}
+						<div className='flex items-center gap-2'>
+							{onMove && (
+								<Button
+									isIconOnly
+									size='sm'
+									variant='flat'
+									onPress={() => onMove(schedule)}
+									aria-label='move'
+								>
+									<MoveVertical size={16} />
+								</Button>
+							)}
+							{onEdit && (
+								<Button
+									isIconOnly
+									size='sm'
+									variant='flat'
+									onPress={() => onEdit(schedule)}
+									aria-label='edit'
+								>
+									<Pencil size={16} />
+								</Button>
+							)}
+						</div>
+					</div>
 				</div>
 			</CardBody>
 		</Card>
