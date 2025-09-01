@@ -14,7 +14,7 @@ class SchedulesIndexRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'group_id' => ['required', 'integer', 'exists:groups,id'],
+            'group_id' => ['nullable', 'integer', 'exists:groups,id'],
             'month' => ['nullable', 'date_format:Y-m'],
         ];
     }

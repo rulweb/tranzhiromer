@@ -1,26 +1,27 @@
 import {useEffect, useMemo, useState} from 'react'
 import {Head, router} from '@inertiajs/react'
-import axios from 'axios'
 import dayjs from 'dayjs'
 import {Button} from '@heroui/react'
 import IncomeGroup from '../../../Components/IncomeGroup'
 import MoveExpenseModal from '../../../Components/MoveExpenseModal'
 import {Schedule} from "@/types";
 
-export default function BudgetIndex() {
-  const [schedules, setSchedules] = useState<Schedule[]>([])
-  const [month, setMonth] = useState<string>(dayjs().format('YYYY-MM'))
+type Props = { schedules: Schedule[]; month: string; groupId: number | null }
+
+export default function BudgetIndex({ schedules: initial, month: initialMonth, groupId }: Props) {
+  const [schedules, setSchedules] = useState<Schedule[]>(initial)
+  const [month, setMonth] = useState<string>(initialMonth || dayjs().format('YYYY-MM'))
   const [moveOpen, setMoveOpen] = useState(false)
   const [movingExpense, setMovingExpense] = useState<Schedule | null>(null)
 
-  const groupId = 1 // TODO: choose current group; for demo use first
-
-  async function load() {
-    const {data} = await axios.get('/api/schedules', { params: { group_id: groupId, month } })
-    setSchedules(data.data)
-  }
-
-  useEffect(() => { load() }, [month])
+  useEffect(() => {
+    // refetch via Inertia when month changes
+    if (groupId) {
+      router.visit(`/lk/budget?group_id=${groupId}&month=${month}`, { preserveScroll: true, preserveState: true })
+    } else {
+      router.visit(`/lk/budget?month=${month}`, { preserveScroll: true, preserveState: true })
+    }
+  }, [month])
 
   const incomes = useMemo(() => schedules.filter(s => s.type === 'income'), [schedules])
   const expensesByParent = useMemo(() => {
@@ -39,7 +40,7 @@ export default function BudgetIndex() {
         <h1 className="text-xl font-semibold">Бюджет на {dayjs(month + '-01').format('MMMM YYYY')}</h1>
         <div className="flex items-center gap-2">
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="border rounded px-2 py-1"/>
-          <Button color="primary" onPress={() => router.visit('/lk/dashboard')}>К ближайшим платежам</Button>
+          <Button color="primary" onPress={() => router.visit('/lk')}>К ближайшим платежам</Button>
         </div>
       </div>
       <div className="flex flex-col gap-3">
@@ -62,7 +63,7 @@ export default function BudgetIndex() {
         onOpenChange={setMoveOpen}
         expense={movingExpense}
         incomes={incomes}
-        onMoved={() => load()}
+        onMoved={() => router.reload({ only: ['schedules'] })}
       />
     </div>
   )

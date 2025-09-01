@@ -1,4 +1,4 @@
-import {Card, CardBody, CardHeader, Button, Collapse} from '@heroui/react'
+import {Card, CardBody, CardHeader, Button} from '@heroui/react'
 import {useMemo, useState} from 'react'
 import ScheduleRow from './ScheduleRow'
 import AddExpenseForm from './AddExpenseForm'
@@ -29,12 +29,14 @@ export default function IncomeGroup({income, expenses, onEdit, onMoveExpense}: I
         </div>
       </CardHeader>
       <CardBody className="pt-0">
-        <Collapse isOpen={open} className="flex flex-col gap-2">
-          {expenses.map((e) => (
-            <ScheduleRow key={e.id} schedule={e} isExpense onMove={onMoveExpense} onEdit={onEdit} />
-          ))}
-          <AddExpenseForm parentId={income.id} groupId={income.group_id} onSuccess={() => { /* reloaded by parent via router.reload */ }} />
-        </Collapse>
+        {open && (
+          <div className="flex flex-col gap-2">
+            {expenses.map((e) => (
+              <ScheduleRow key={e.id} schedule={e} isExpense onMove={onMoveExpense} onEdit={onEdit} />
+            ))}
+            <AddExpenseForm parentId={income.id} groupId={income.group_id} onSuccess={() => { /* reloaded by parent via router.reload */ }} />
+          </div>
+        )}
       </CardBody>
     </Card>
   )

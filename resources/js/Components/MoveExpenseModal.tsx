@@ -1,5 +1,5 @@
 import {Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Button, Select, SelectItem} from '@heroui/react'
-import axios from 'axios'
+import {router} from '@inertiajs/react'
 import {useState} from 'react'
 import {Schedule} from '../types'
 
@@ -17,9 +17,12 @@ export default function MoveExpenseModal({isOpen, onOpenChange, expense, incomes
 
   async function handleSave() {
     if (!expense || !targetId) return
-    await axios.patch(`/api/schedules/${expense.id}`, { parent_id: Number(targetId) })
-    onMoved?.()
-    onOpenChange(false)
+    await router.patch(`/lk/schedules/${expense.id}`, { parent_id: Number(targetId) }, {
+      onSuccess: () => {
+        onMoved?.()
+        onOpenChange(false)
+      }
+    })
   }
 
   return (

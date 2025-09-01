@@ -7,11 +7,12 @@ use App\Http\Requests\Lk\Corrections\StoreCorrectionRequest;
 use App\Http\Requests\Lk\Corrections\UpdateCorrectionRequest;
 use App\Models\Correction;
 use App\Models\Schedule;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 
 class CorrectionsController extends Controller
 {
-    public function store(StoreCorrectionRequest $request): JsonResponse
+    public function store(StoreCorrectionRequest $request): RedirectResponse
     {
         $validated = $request->validated();
 
@@ -23,21 +24,21 @@ class CorrectionsController extends Controller
             'adjusted_date' => $validated['adjusted_date'] ?? null,
         ]);
 
-        $this->authorize('create', $correction);
+        Gate::authorize('create', $correction);
 
         $correction->save();
 
-        return response()->json(['data' => $correction], 201);
+        return redirect()->back()->with('success', 'Коррекция добавлена');
     }
 
-    public function update(UpdateCorrectionRequest $request, Correction $correction): JsonResponse
+    public function update(UpdateCorrectionRequest $request, Correction $correction): RedirectResponse
     {
-        $this->authorize('update', $correction);
+        Gate::authorize('update', $correction);
 
         $validated = $request->validated();
 
         $correction->fill($validated)->save();
 
-        return response()->json(['data' => $correction]);
+        return redirect()->back()->with('success', 'Коррекция сохранена');
     }
 }

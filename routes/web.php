@@ -24,9 +24,17 @@ Route::middleware('web')->group(function () {
         Route::post('logout', [\App\Http\Controllers\SocialAuthController::class, 'logout'])
             ->name('logout');
 
-        Route::get('budget', function () {
-            return \Inertia\Inertia::render('Lk/Budget/Index');
-        })->name('lk.budget');
+        Route::get('budget', [\App\Http\Controllers\Lk\SchedulesController::class, 'index'])->name('lk.budget');
+
+        // Schedules CRUD via Inertia
+        Route::post('schedules', [\App\Http\Controllers\Lk\SchedulesController::class, 'store'])->name('lk.schedules.store');
+        Route::patch('schedules/{schedule}', [\App\Http\Controllers\Lk\SchedulesController::class, 'update'])->name('lk.schedules.update');
+        Route::delete('schedules/{schedule}', [\App\Http\Controllers\Lk\SchedulesController::class, 'destroy'])->name('lk.schedules.destroy');
+
+        // Corrections via Inertia
+        Route::post('corrections', [\App\Http\Controllers\Lk\CorrectionsController::class, 'store'])->name('lk.corrections.store');
+        Route::patch('corrections/{correction}', [\App\Http\Controllers\Lk\CorrectionsController::class, 'update'])->name('lk.corrections.update');
+
         Route::get('groups', [\App\Http\Controllers\Lk\GroupsController::class, 'index'])->name('lk.groups.index');
     });
 });

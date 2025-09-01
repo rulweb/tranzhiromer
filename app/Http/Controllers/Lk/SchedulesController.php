@@ -9,16 +9,29 @@ use App\Http\Requests\Lk\Schedules\StoreScheduleRequest;
 use App\Http\Requests\Lk\Schedules\UpdateScheduleRequest;
 use App\Models\Group;
 use App\Models\Schedule;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
 class SchedulesController extends Controller
 {
-    public function index(SchedulesIndexRequest $request): JsonResponse
+    public function index(SchedulesIndexRequest $request): InertiaResponse
     {
         $validated = $request->validated();
 
+        // Determine group: use provided or first user group
+        $user = $request->user();
+        if (! isset($validated['group_id'])) {
+            $firstGroupId = Group::query()
+                ->whereHas('members', fn ($q) => $q->where('user_id', $user->id))
+                ->orderBy('id')
+                ->value('id');
+            $validated['group_id'] = $firstGroupId;
+        }
+
         $group = Group::findOrFail((int) $validated['group_id']);
-        $this->authorize('view', $group);
+        Gate::authorize('view', $group);
 
         $query = Schedule::query()
             ->where('group_id', $group->id)
@@ -37,15 +50,19 @@ class SchedulesController extends Controller
 
         $schedules = $query->orderBy('type')->orderBy('id')->get();
 
-        return response()->json(['data' => $schedules]);
+        return Inertia::render('Lk/Budget/Index', [
+            'schedules' => $schedules,
+            'month' => $validated['month'] ?? now()->format('Y-m'),
+            'groupId' => $group->id,
+        ]);
     }
 
-    public function store(StoreScheduleRequest $request): JsonResponse
+    public function store(StoreScheduleRequest $request): RedirectResponse
     {
         $validated = $request->validated();
 
         $group = Group::findOrFail($validated['group_id']);
-        $this->authorize('view', $group);
+        Gate::authorize('view', $group);
 
         if (($validated['type'] ?? null) === ScheduleType::EXPENSE->value && empty($validated['parent_id'])) {
             return response()->json(['message' => 'Expense must have parent_id (income)'], 422);
@@ -55,29 +72,33 @@ class SchedulesController extends Controller
         $schedule->group_id = $group->id;
 
         // Policy create: pass a schedule with related group
-        $this->authorize('create', $schedule);
+        Gate::authorize('create', $schedule);
 
         $schedule->save();
 
-        return response()->json(['data' => $schedule->fresh('parent')], 201);
+        return redirect()->back()->with('success', 'Создано');
     }
 
-    public function update(UpdateScheduleRequest $request, Schedule $schedule): JsonResponse
+    public function update(UpdateScheduleRequest $request, Schedule $schedule): InertiaResponse
     {
-        $this->authorize('update', $schedule);
+        Gate::authorize('update', $schedule);
 
         $validated = $request->validated();
 
         $schedule->fill($validated)->save();
 
-        return response()->json(['data' => $schedule->fresh('parent')]);
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json(['data' => $schedule->fresh('parent')]);
+        }
+
+        return redirect()->back()->with('success', 'Сохранено');
     }
 
-    public function destroy(Schedule $schedule): JsonResponse
+    public function destroy(Schedule $schedule): RedirectResponse
     {
-        $this->authorize('delete', $schedule);
+        Gate::authorize('delete', $schedule);
         $schedule->delete();
 
-        return response()->json(['message' => 'Deleted']);
+        return redirect()->back()->with('success', 'Удалено');
     }
 }

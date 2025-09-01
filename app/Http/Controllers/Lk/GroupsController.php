@@ -7,14 +7,15 @@ use App\Http\Requests\Lk\Groups\InviteToGroupRequest;
 use App\Http\Requests\Lk\Groups\StoreGroupRequest;
 use App\Models\Group;
 use App\Models\User;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
 class GroupsController extends Controller
 {
-    public function index(Request $request): JsonResponse|InertiaResponse
+    public function index(Request $request): InertiaResponse
     {
         $user = $request->user();
 
@@ -27,18 +28,14 @@ class GroupsController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        if ($request->wantsJson() || $request->is('api/*')) {
-            return response()->json(['data' => $groups]);
-        }
-
         return Inertia::render('Lk/Groups/Index', [
             'groups' => $groups,
         ]);
     }
 
-    public function store(StoreGroupRequest $request): JsonResponse
+    public function store(StoreGroupRequest $request): RedirectResponse
     {
-        $this->authorize('create', Group::class);
+        Gate::authorize('create', Group::class);
 
         $validated = $request->validated();
 
@@ -53,25 +50,25 @@ class GroupsController extends Controller
             'joined_at' => now(),
         ]);
 
-        return response()->json(['data' => $group->loadCount('members')], 201);
+        return redirect()->back()->with('success', 'Группа создана');
     }
 
-    public function invite(InviteToGroupRequest $request, Group $group): JsonResponse
+    public function invite(InviteToGroupRequest $request, Group $group): RedirectResponse
     {
-        $this->authorize('manageMembers', $group);
+        Gate::authorize('manageMembers', $group);
 
         $validated = $request->validated();
 
         $user = User::where('email', $validated['email'])->firstOrFail();
 
         // Avoid duplicate attachment
-        if (! $group->members()->where('user_id', $user->id)->exists()) {
+        if (!$group->members()->where('user_id', $user->id)->exists()) {
             $group->members()->attach($user->id, [
                 'role' => 'member',
                 'joined_at' => now(),
             ]);
         }
 
-        return response()->json(['message' => 'User invited', 'data' => $group->load('members')]);
+        return redirect()->back()->with('success', 'Пользователь добавлен в группу');
     }
 }

@@ -15,7 +15,7 @@ export default function AddExpenseForm({parentId, groupId, onSuccess}: AddExpens
 
   return (
     <Form
-      action="/api/schedules"
+      action="/lk/schedules"
       method="post"
       onSuccess={() => {
         onSuccess?.()
