@@ -2,6 +2,7 @@ import {useEffect, useMemo, useState} from 'react'
 import {Head, router} from '@inertiajs/react'
 import dayjs from 'dayjs'
 import {Button} from '@heroui/react'
+import LkLayout from '../../../Layouts/LkLayout'
 import IncomeGroup from '../../../Components/IncomeGroup'
 import MoveExpenseModal from '../../../Components/MoveExpenseModal'
 import {Schedule} from "@/types";
@@ -34,7 +35,7 @@ export default function BudgetIndex({ schedules: initial, month: initialMonth, g
   }, [schedules])
 
   return (
-    <div className="max-w-3xl mx-auto p-4 sm:p-6">
+    <LkLayout>
       <Head title={`Бюджет на ${dayjs(month + '-01').format('MMMM YYYY')}`} />
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold">Бюджет на {dayjs(month + '-01').format('MMMM YYYY')}</h1>
@@ -65,6 +66,6 @@ export default function BudgetIndex({ schedules: initial, month: initialMonth, g
         incomes={incomes}
         onMoved={() => router.reload({ only: ['schedules'] })}
       />
-    </div>
+    </LkLayout>
   )
 }

@@ -1,5 +1,6 @@
 import {Head, Link} from '@inertiajs/react'
 import {Card, CardBody, CardHeader, Button} from '@heroui/react'
+import LkLayout from '../../../Layouts/LkLayout'
 import {Group} from '../../../types'
 
 type Props = {
@@ -8,7 +9,7 @@ type Props = {
 
 export default function GroupsIndex({groups}: Props) {
   return (
-    <div className="max-w-3xl mx-auto p-4 sm:p-6">
+    <LkLayout>
       <Head title="Группы" />
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold">Мои группы</h1>
@@ -27,6 +28,6 @@ export default function GroupsIndex({groups}: Props) {
           </Card>
         ))}
       </div>
-    </div>
+    </LkLayout>
   )
 }
