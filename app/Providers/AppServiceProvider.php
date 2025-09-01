@@ -2,7 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\Correction;
+use App\Models\Group;
+use App\Models\Schedule;
+use App\Policies\CorrectionPolicy;
+use App\Policies\GroupPolicy;
+use App\Policies\SchedulePolicy;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -32,5 +39,9 @@ class AppServiceProvider extends ServiceProvider
             $event->extendSocialite('vkid', \SocialiteProviders\VKID\Provider::class);
             $event->extendSocialite('yandex', \SocialiteProviders\Yandex\Provider::class);
         });
+
+        Gate::policy(Group::class, GroupPolicy::class);
+        Gate::policy(Schedule::class, SchedulePolicy::class);
+        Gate::policy(Correction::class, CorrectionPolicy::class);
     }
 }
