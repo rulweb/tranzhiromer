@@ -5,6 +5,10 @@ import { Calendar } from 'lucide-react'
 import ScheduleRow from '../../Components/ScheduleRow'
 import LkLayout from '../../Layouts/LkLayout'
 import { Schedule } from '../../types'
+import ConfirmPayModal from '../../Components/ConfirmPayModal'
+import { router } from '@inertiajs/react'
+import { useState } from 'react'
+import { Input } from '@heroui/react'
 
 type Props = {
 	schedules: Schedule[]
@@ -67,6 +71,9 @@ function nextDueDate(s: Schedule): dayjs.Dayjs | null {
 }
 
 export default function Dashboard({ schedules }: Props) {
+	const [payOpen, setPayOpen] = useState<boolean>(false)
+	const [payingExpense, setPayingExpense] = useState<Schedule | null>(null)
+	const [payLeftover, setPayLeftover] = useState<string>('0')
 	// Compute next dates and group by date string
 	const mapped = schedules.map(s => ({ s, date: nextDueDate(s) }))
 	const items = (
@@ -110,17 +117,53 @@ export default function Dashboard({ schedules }: Props) {
 							<div className='sticky top-0 z-10 bg-white/70 dark:bg-black/50 backdrop-blur px-1 py-1 text-xs font-semibold text-gray-600 dark:text-gray-300'>
 								{g.date.format('D MMMM')}
 							</div>
-							{g.items.map(s => (
+       {g.items.map(s => (
 								<ScheduleRow
 									key={s.id}
 									schedule={s}
 									isExpense={s.type === 'expense'}
+									onPaid={exp => {
+										setPayingExpense(exp)
+										setPayLeftover(
+											exp.expected_leftover != null ? String(exp.expected_leftover) : '0'
+										)
+										setPayOpen(true)
+									}}
 								/>
 							))}
 						</div>
 					))}
 				</div>
 			</Card>
+
+			<ConfirmPayModal
+				isOpen={payOpen}
+				onOpenChange={setPayOpen}
+				title='Подтверждение оплаты'
+				description='Укажите остаток и подтвердите проведение оплаты.'
+				confirmText='Отметить как оплачено'
+				onConfirm={async () => {
+					if (!payingExpense) return
+					await router.post(`/lk/schedules/${payingExpense.id}/pay`, { leftover: payLeftover }, {
+						preserveScroll: true,
+						onSuccess: () => {
+							setPayingExpense(null)
+							setPayLeftover('0')
+							router.reload({ only: ['schedules'] })
+						}
+					})
+				}}
+			>
+				<div className='mt-2'>
+					<Input
+						label='Остаток'
+						type='number'
+						step='0.01'
+						value={payLeftover}
+						onChange={e => setPayLeftover(e.target.value)}
+					/>
+				</div>
+			</ConfirmPayModal>
 		</LkLayout>
 	)
 }

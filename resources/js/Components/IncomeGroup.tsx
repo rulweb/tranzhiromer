@@ -106,11 +106,15 @@ export default function IncomeGroup({
 	onPayExpense
 }: IncomeGroupProps) {
 	const [open, setOpen] = useState(true)
-	const totalExpenses = useMemo(
-		() => expenses.reduce((sum, e) => sum + Number(e.amount), 0),
-		[expenses]
-	)
-	const rest = Number(income.amount) - totalExpenses
+	const sums = useMemo(() => {
+		const sumAmounts = expenses.reduce((sum, e) => sum + Number(e.amount), 0)
+		const sumLeftovers = expenses.reduce(
+			(sum, e) => sum + Number(e.expected_leftover ?? 0),
+			0
+		)
+		return { sumAmounts, sumLeftovers }
+	}, [expenses])
+	const rest = Number(income.amount) - sums.sumAmounts + sums.sumLeftovers
 
 	return (
 		<Card>

@@ -123,24 +123,29 @@ export default function ScheduleRow({
 					<div className='hidden sm:block text-xs text-gray-600'>
 						{formatPeriodicity(schedule)}
 					</div>
-					<div
-						className={
-							'text-sm font-semibold ' +
-							(isExpense ? 'text-red-600' : 'text-green-700')
-						}
-					>
-						{isExpense ? '-' : '+'}
-						{Number(schedule.amount).toLocaleString('ru-RU')}
-					</div>
-					{isExpense && !schedule.is_paid && (
-						<Button
-							size='sm'
-							variant='flat'
-							onPress={() => onPaid?.(schedule)}
-						>
-							Оплатить
-						</Button>
-					)}
+ 				<div
+ 					className={
+ 						'text-sm font-semibold ' +
+ 						(isExpense ? 'text-red-600' : 'text-green-700')
+ 					}
+ 				>
+ 					{isExpense ? '-' : '+'}
+ 					{Number(schedule.amount).toLocaleString('ru-RU')}
+ 				</div>
+ 				{isExpense && schedule.expected_leftover != null && (
+ 					<div className='text-xs text-gray-600'>
+ 						Остаток: {Number(schedule.expected_leftover).toLocaleString('ru-RU')} ₽
+ 					</div>
+ 				)}
+ 				{isExpense && !schedule.is_paid && (
+ 					<Button
+ 						size='sm'
+ 						variant='flat'
+ 						onPress={() => onPaid?.(schedule)}
+ 					>
+ 						Оплатить
+ 					</Button>
+ 				)}
 					{onMove && (
 						<Button
 							isIconOnly
