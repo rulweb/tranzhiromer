@@ -16,10 +16,11 @@ export default function Landing() {
 								loading='eager'
 							/>
 						</Link>
-						<p className='mt-5 text-base leading-7 text-gray-700 sm:mt-6 sm:text-xl sm:leading-9'>
-							Простое и эффективное приложение для ведения домашней бухгалтерии.
-							Контролируйте свои расходы и достигайте финансовых целей.
-						</p>
+ 					<p className='mt-5 text-base leading-7 text-gray-700 sm:mt-6 sm:text-xl sm:leading-9'>
+ 						ТранжироМер помогает планировать бюджет «от доходов»: привязывайте
+ 						расходы к источникам дохода, следите за остатком и управляйте тратами
+ 						в понятном интерфейсе.
+ 					</p>
 						<div className='mt-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center sm:gap-6'>
 							<Button
 								as={Link}
@@ -42,34 +43,36 @@ export default function Landing() {
 							Помогаем видеть картину ваших финансов и принимать решения
 							осознанно
 						</p>
-						<p className='mt-3 text-base leading-7 text-gray-700 sm:mt-4 sm:text-lg sm:leading-8'>
-							ТранжироМер — это минималистичный инструмент для учета доходов и
-							расходов, планирования бюджета и анализа трат по категориям. Мы
-							сфокусированы на скорости, простоте и наглядности. Подходит для
-							личного использования и семейной бухгалтерии.
-						</p>
+ 					<p className='mt-3 text-base leading-7 text-gray-700 sm:mt-4 sm:text-lg sm:leading-8'>
+ 						Учет доходов и расходов с акцентом на планирование: создавайте разовые
+ 						и периодические платежи (ежедневно, еженедельно, ежемесячно) в удобном интерфейсе.
+ 					</p>
 					</div>
 
 					<div className='mx-auto mt-10 max-w-6xl sm:mt-16'>
-						<div className='grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3'>
+						<div className='grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4'>
 							<Card className='p-5 sm:p-6'>
-								<dt className='text-base font-semibold'>Учет расходов</dt>
+								<dt className='text-base font-semibold'>Бюджет от доходов</dt>
 								<dd className='mt-2 text-sm text-gray-600'>
-									Записывайте все траты и следите за балансом.
+									Привязывайте расходы к доходам и контролируйте «Остаток» по каждому источнику.
 								</dd>
 							</Card>
 							<Card className='p-5 sm:p-6'>
-								<dt className='text-base font-semibold'>Категории и отчеты</dt>
+								<dt className='text-base font-semibold'>Расписания платежей</dt>
 								<dd className='mt-2 text-sm text-gray-600'>
-									Анализируйте расходы по категориям.
+									Разовые и периодические: ежедневно, еженедельно, ежемесячно.
 								</dd>
 							</Card>
 							<Card className='p-5 sm:p-6'>
-								<dt className='text-base font-semibold'>
-									Планирование бюджета
-								</dt>
+								<dt className='text-base font-semibold'>Гибкое управление расходами</dt>
 								<dd className='mt-2 text-sm text-gray-600'>
-									Ставьте финансовые цели и достигайте их.
+									Перемещайте расходы между доходами, редактируйте в модалках, подтверждайте удаление перед действием. Нераспределённые платежи — под контролем.
+								</dd>
+							</Card>
+							<Card className='p-5 sm:p-6'>
+								<dt className='text-base font-semibold'>Совместная работа</dt>
+								<dd className='mt-2 text-sm text-gray-600'>
+									Группы и приглашения: ведите общий бюджет с семьёй или партнёрами.
 								</dd>
 							</Card>
 						</div>
