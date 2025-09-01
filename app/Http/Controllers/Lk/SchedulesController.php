@@ -22,15 +22,8 @@ class SchedulesController extends Controller
 
         // Determine group: use provided or first user group
         $user = $request->user();
-        if (! isset($validated['group_id'])) {
-            $firstGroupId = Group::query()
-                ->whereHas('members', fn ($q) => $q->where('user_id', $user->id))
-                ->orderBy('id')
-                ->value('id');
-            $validated['group_id'] = $user->current_group_id ?? $firstGroupId;
-        }
 
-        $group = Group::findOrFail((int) $validated['group_id']);
+        $group = Group::findOrFail((int) $user->current_group_id);
         Gate::authorize('view', $group);
 
         $query = Schedule::query()
