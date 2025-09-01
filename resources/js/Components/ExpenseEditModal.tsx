@@ -14,6 +14,7 @@ import { Form, router } from '@inertiajs/react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { Schedule } from '../types'
+import ConfirmDeleteModal from './ConfirmDeleteModal'
 
 const iconOptions = [
 	'home',
@@ -41,6 +42,7 @@ export default function ExpenseEditModal({
 	const [periodType, setPeriodType] = useState<
 		'daily' | 'weekly' | 'monthly' | 'one_time'
 	>('monthly')
+	const [confirmOpen, setConfirmOpen] = useState(false)
 
 	useEffect(() => {
 		if (expense) {
@@ -205,24 +207,17 @@ export default function ExpenseEditModal({
 										Отмена
 									</Button>
 									<div className='flex-1' />
-									<Button
-										color='danger'
-										variant='bordered'
-										onPress={() => {
-											if (processing) { return }
-											if (!confirm('Удалить этот расход?')) { return }
-											router.delete(`/lk/schedules/${expense.id}`, {
-												preserveScroll: true,
-												onSuccess: () => {
-													close()
-													router.reload({ only: ['schedules'] })
-												}
-											})
-										}}
-										disabled={processing}
-									>
-										Удалить
-									</Button>
+   						<Button
+   							color='danger'
+   							variant='bordered'
+   							onPress={() => {
+   								if (processing) { return }
+   								setConfirmOpen(true)
+   							}}
+   							disabled={processing}
+   						>
+   							Удалить
+   						</Button>
 									<Button
 										color='primary'
 										type='submit'
@@ -236,6 +231,22 @@ export default function ExpenseEditModal({
 					</Form>
 				)}
 			</ModalContent>
+			<ConfirmDeleteModal
+				isOpen={confirmOpen}
+				onOpenChange={setConfirmOpen}
+				title='Удалить расход?'
+				description='Удалить этот расход?'
+				confirmText='Удалить'
+				onConfirm={async () => {
+					await router.delete(`/lk/schedules/${expense.id}`, {
+						preserveScroll: true,
+						onSuccess: () => {
+							onOpenChange(false)
+							router.reload({ only: ['schedules'] })
+						}
+					})
+				}}
+			/>
 		</Modal>
 	)
 }

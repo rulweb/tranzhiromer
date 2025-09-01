@@ -112,10 +112,10 @@ export default function ExpenseCreateModal({
 										label='Привязать к доходу'
 										selectedKeys={[parentId]}
 										onChange={e => setParentId(e.target.value)}
-										isRequired
 										isInvalid={Boolean((errors as any)?.parent_id)}
 										errorMessage={(errors as any)?.parent_id}
 									>
+										<SelectItem key=''>Нераспределённые платежи</SelectItem>
 										{incomes.map(inc => (
 											<SelectItem key={inc.id}>{inc.name}</SelectItem>
 										))}

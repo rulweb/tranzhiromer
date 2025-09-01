@@ -32,14 +32,4 @@ class StoreScheduleRequest extends FormRequest
             'end_date' => ['nullable', 'date'],
         ];
     }
-
-    public function withValidator($validator): void
-    {
-        $validator->after(function ($v) {
-            $type = $this->input('type');
-            if ($type === ScheduleType::EXPENSE->value && empty($this->input('parent_id'))) {
-                $v->errors()->add('parent_id', 'Expense must have parent_id (income)');
-            }
-        });
-    }
 }

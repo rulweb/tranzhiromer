@@ -14,6 +14,7 @@ import { Form, router } from '@inertiajs/react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { Schedule } from '../types'
+import ConfirmDeleteModal from './ConfirmDeleteModal'
 
 const iconOptions = [
 	'home',
@@ -41,6 +42,7 @@ export default function IncomeEditModal({
 	const [periodType, setPeriodType] = useState<
 		'daily' | 'weekly' | 'monthly' | 'one_time'
 	>('monthly')
+	const [confirmOpen, setConfirmOpen] = useState(false)
 
 	useEffect(() => {
 		if (income) {
@@ -204,24 +206,17 @@ export default function IncomeEditModal({
 										Отмена
 									</Button>
 									<div className='flex-1' />
-									<Button
-										color='danger'
-										variant='bordered'
-										onPress={() => {
-											if (processing) { return }
-           if (!confirm('Удалить этот доход? Все связанные расходы останутся без привязки.')) { return }
-											router.delete(`/lk/schedules/${income.id}`, {
-												preserveScroll: true,
-												onSuccess: () => {
-													close()
-													router.reload({ only: ['schedules'] })
-												}
-											})
-										}}
-										disabled={processing}
-									>
-										Удалить
-									</Button>
+   						<Button
+   							color='danger'
+   							variant='bordered'
+   							onPress={() => {
+   								if (processing) { return }
+   								setConfirmOpen(true)
+   							}}
+   							disabled={processing}
+   						>
+   							Удалить
+   						</Button>
 									<Button
 										color='primary'
 										type='submit'
@@ -235,6 +230,22 @@ export default function IncomeEditModal({
 					</Form>
 				)}
 			</ModalContent>
+			<ConfirmDeleteModal
+				isOpen={confirmOpen}
+				onOpenChange={setConfirmOpen}
+				title='Удалить доход?'
+				description='Удалить этот доход? Все связанные расходы останутся без привязки.'
+				confirmText='Удалить'
+				onConfirm={async () => {
+					await router.delete(`/lk/schedules/${income.id}`, {
+						preserveScroll: true,
+						onSuccess: () => {
+							onOpenChange(false)
+							router.reload({ only: ['schedules'] })
+						}
+					})
+				}}
+			/>
 		</Modal>
 	)
 }

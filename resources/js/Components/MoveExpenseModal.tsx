@@ -28,14 +28,14 @@ export default function MoveExpenseModal({
 	incomes,
 	onMoved
 }: MoveExpenseModalProps) {
-	const [targetId, setTargetId] = useState<string>('')
+	const [targetId, setTargetId] = useState<string>(String(expense?.parent_id ?? ''))
 	const options = incomes.filter(i => i.id !== (expense?.parent_id || 0))
 
 	async function handleSave() {
-		if (!expense || !targetId) return
+		if (!expense) return
 		await router.patch(
 			`/lk/schedules/${expense.id}`,
-			{ parent_id: Number(targetId) },
+			{ parent_id: targetId ? Number(targetId) : null },
 			{
 				onSuccess: () => {
 					onMoved?.()
@@ -57,9 +57,10 @@ export default function MoveExpenseModal({
 						<ModalBody>
 							<Select
 								label='Новый доход'
-								selectedKeys={targetId ? [targetId] : []}
+								selectedKeys={[targetId]}
 								onChange={e => setTargetId(e.target.value)}
 							>
+								<SelectItem key=''>Нераспределённые платежи</SelectItem>
 								{options.map(i => (
 									<SelectItem key={String(i.id)}>{i.name}</SelectItem>
 								))}
@@ -75,7 +76,6 @@ export default function MoveExpenseModal({
 							<Button
 								color='primary'
 								onPress={handleSave}
-								isDisabled={!targetId}
 							>
 								Сохранить
 							</Button>

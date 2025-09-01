@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Lk;
 
-use App\Enums\ScheduleType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Lk\Schedules\SchedulesIndexRequest;
 use App\Http\Requests\Lk\Schedules\StoreScheduleRequest;
@@ -12,7 +11,6 @@ use App\Models\Schedule;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -56,12 +54,6 @@ class SchedulesController extends Controller
 
         $group = Group::findOrFail($validated['group_id']);
         Gate::authorize('view', $group);
-
-        if (($validated['type'] ?? null) === ScheduleType::EXPENSE->value && empty($validated['parent_id'])) {
-            throw ValidationException::withMessages([
-                'parent_id' => ['Expense must have parent_id (income)'],
-            ]);
-        }
 
         // Normalize one-time: end_date equals single_date
         if (($validated['period_type'] ?? null) === 'one_time') {
