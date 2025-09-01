@@ -1,13 +1,19 @@
 import { Link, router, usePage } from '@inertiajs/react'
-import {Button, Card, Chip, User} from '@heroui/react'
-import { Calendar, LogOut, Wallet } from 'lucide-react'
+import {Button, Card, User} from '@heroui/react'
+import { Calendar, LogOut } from 'lucide-react'
+import ScheduleRow from '../../Components/ScheduleRow'
+import { Schedule } from '../../types'
 
-export default function Index() {
+type Props = {
+  schedules: Schedule[]
+}
+
+export default function Dashboard({ schedules }: Props) {
   const { props } = usePage()
   const user = (props as any).auth?.user || (props as any).user
 
   const handleLogout = () => {
-    router.post('/logout')
+    router.post('/lk/logout')
   }
 
   return (
@@ -35,6 +41,14 @@ export default function Index() {
         <Card className="p-5">
           <div className="mb-3 flex items-center gap-2 text-base font-medium">
             <Calendar size={18} /> Ближайшие обязательные платежи
+          </div>
+          <div className="flex flex-col gap-2">
+            {schedules.length === 0 && (
+              <div className="text-sm text-gray-500">Нет предстоящих платежей.</div>
+            )}
+            {schedules.map((s) => (
+              <ScheduleRow key={s.id} schedule={s} isExpense={s.type === 'expense'} />
+            ))}
           </div>
         </Card>
       </div>
