@@ -1,7 +1,7 @@
 import {Card, CardBody, CardHeader, Button} from '@heroui/react'
 import {useMemo, useState} from 'react'
 import ScheduleRow from './ScheduleRow'
-import AddExpenseForm from './AddExpenseForm'
+// import AddExpenseForm from './AddExpenseForm'
 import {Schedule} from '../types'
 import dayjs from 'dayjs'
 
@@ -60,11 +60,12 @@ function nextDueDate(s: Schedule): dayjs.Dayjs | null {
 export type IncomeGroupProps = {
   income: Schedule
   expenses: Schedule[]
-  onEdit?: (s: Schedule) => void
+  onEditIncome?: (s: Schedule) => void
+  onEditExpense?: (s: Schedule) => void
   onMoveExpense?: (s: Schedule) => void
 }
 
-export default function IncomeGroup({income, expenses, onEdit, onMoveExpense}: IncomeGroupProps) {
+export default function IncomeGroup({income, expenses, onEditIncome, onEditExpense, onMoveExpense}: IncomeGroupProps) {
   const [open, setOpen] = useState(false)
   const totalExpenses = useMemo(() => expenses.reduce((sum, e) => sum + Number(e.amount), 0), [expenses])
   const rest = Number(income.amount) - totalExpenses
@@ -76,8 +77,11 @@ export default function IncomeGroup({income, expenses, onEdit, onMoveExpense}: I
           <div className="text-base font-semibold">{income.name}</div>
           <div className="text-xs text-gray-500">Доход: {Number(income.amount).toLocaleString('ru-RU')} ₽</div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div className={"text-sm font-semibold " + (rest >= 0 ? 'text-green-700' : 'text-red-600')}>Остаток: {rest.toLocaleString('ru-RU')} ₽</div>
+          {onEditIncome && (
+            <Button size="sm" variant="light" onPress={() => onEditIncome(income)}>Редактировать</Button>
+          )}
           <Button size="sm" variant="flat" onPress={() => setOpen((v) => !v)}>{open ? 'Скрыть' : 'Показать'}</Button>
         </div>
       </CardHeader>
@@ -106,13 +110,12 @@ export default function IncomeGroup({income, expenses, onEdit, onMoveExpense}: I
                       {g.date.format('D MMMM')}
                     </div>
                     {g.items.map((e) => (
-                      <ScheduleRow key={e.id} schedule={e} isExpense onMove={onMoveExpense} onEdit={onEdit} />
+                      <ScheduleRow key={e.id} schedule={e} isExpense onMove={onMoveExpense} onEdit={onEditExpense} />
                     ))}
                   </div>
                 ))
               )
             })()}
-            <AddExpenseForm parentId={income.id} groupId={income.group_id} onSuccess={() => { /* reloaded by parent via router.reload */ }} />
           </div>
         )}
       </CardBody>

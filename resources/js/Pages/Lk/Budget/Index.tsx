@@ -5,6 +5,11 @@ import {Button} from '@heroui/react'
 import LkLayout from '../../../Layouts/LkLayout'
 import IncomeGroup from '../../../Components/IncomeGroup'
 import MoveExpenseModal from '../../../Components/MoveExpenseModal'
+import ScheduleRow from '../../../Components/ScheduleRow'
+import IncomeCreateModal from '../../../Components/IncomeCreateModal'
+import IncomeEditModal from '../../../Components/IncomeEditModal'
+import ExpenseEditModal from '../../../Components/ExpenseEditModal'
+import ExpenseCreateModal from '../../../Components/ExpenseCreateModal'
 import {Schedule} from "@/types";
 
 function nextDueDate(s: Schedule): dayjs.Dayjs | null {
@@ -66,6 +71,12 @@ export default function BudgetIndex({ schedules: initial, month: initialMonth }:
   const [month, setMonth] = useState<string>(initialMonth || dayjs().format('YYYY-MM'))
   const [moveOpen, setMoveOpen] = useState(false)
   const [movingExpense, setMovingExpense] = useState<Schedule | null>(null)
+  const [createIncomeOpen, setCreateIncomeOpen] = useState<boolean>(false)
+    const [createExpenseOpen, setCreateExpenseOpen] = useState<boolean>(false)
+  const [editIncomeOpen, setEditIncomeOpen] = useState<boolean>(false)
+  const [editingIncome, setEditingIncome] = useState<Schedule | null>(null)
+  const [editExpenseOpen, setEditExpenseOpen] = useState<boolean>(false)
+  const [editingExpense, setEditingExpense] = useState<Schedule | null>(null)
 
   // Keep schedules in sync with server props when they change
   useEffect(() => {
@@ -87,6 +98,9 @@ export default function BudgetIndex({ schedules: initial, month: initialMonth }:
     return map
   }, [schedules])
 
+  const unassigned = useMemo(() => expensesByParent.get(0) || [], [expensesByParent])
+  const unassignedTotal = useMemo(() => unassigned.reduce((sum, e) => sum + Number(e.amount), 0), [unassigned])
+
   return (
     <LkLayout>
       <Head title={`Бюджет на ${dayjs(month + '-01').format('MMMM YYYY')}`} />
@@ -94,9 +108,27 @@ export default function BudgetIndex({ schedules: initial, month: initialMonth }:
         <h1 className="text-xl font-semibold">Бюджет на {dayjs(month + '-01').format('MMMM YYYY')}</h1>
         <div className="flex items-center gap-2">
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="border rounded px-2 py-1"/>
-          <Button color="primary" onPress={() => router.visit('/lk')}>К ближайшим платежам</Button>
+          <Button color="success" onPress={() => setCreateIncomeOpen(true)}>Добавить доход</Button>
+                    <Button color="danger" variant="flat" onPress={() => setCreateExpenseOpen(true)}>Добавить расход</Button>
         </div>
       </div>
+
+      {unassigned.length > 0 && (
+        <div className="mb-4">
+          <div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50/60 dark:bg-red-900/20 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="text-sm font-semibold text-red-700 dark:text-red-300">Нераспределённые платежи</div>
+              <div className="text-xs text-red-600 dark:text-red-300">{unassigned.length} шт · {unassignedTotal.toLocaleString('ru-RU')} ₽</div>
+            </div>
+            <div className="flex flex-col gap-2">
+              {unassigned.map((e) => (
+                <ScheduleRow key={e.id} schedule={e} isExpense onMove={(x) => { setMovingExpense(x); setMoveOpen(true) }} onEdit={(s) => { setEditingExpense(s); setEditExpenseOpen(true) }} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col gap-3">
         {incomes.map((inc) => (
           <IncomeGroup
@@ -104,12 +136,9 @@ export default function BudgetIndex({ schedules: initial, month: initialMonth }:
             income={inc}
             expenses={expensesByParent.get(inc.id) || []}
             onMoveExpense={(e) => { setMovingExpense(e); setMoveOpen(true) }}
+            onEditIncome={(incSel) => { setEditingIncome(incSel); setEditIncomeOpen(true) }} onEditExpense={(expSel) => { setEditingExpense(expSel); setEditExpenseOpen(true) }}
           />
         ))}
-      </div>
-
-      <div className="mt-6 flex justify-center">
-        <Button variant="flat" color="success">Добавить доход</Button>
       </div>
 
       <MoveExpenseModal
@@ -119,6 +148,10 @@ export default function BudgetIndex({ schedules: initial, month: initialMonth }:
         incomes={incomes}
         onMoved={() => router.reload({ only: ['schedules'] })}
       />
+      <IncomeCreateModal isOpen={createIncomeOpen} onOpenChange={setCreateIncomeOpen} groupId={(schedules[0]?.group_id) ?? 0} />
+      <ExpenseCreateModal isOpen={createExpenseOpen} onOpenChange={setCreateExpenseOpen} groupId={(schedules[0]?.group_id) ?? 0} incomes={incomes} />
+      <IncomeEditModal isOpen={editIncomeOpen} onOpenChange={setEditIncomeOpen} income={editingIncome} />
+      <ExpenseEditModal isOpen={editExpenseOpen} onOpenChange={setEditExpenseOpen} expense={editingExpense} />
     </LkLayout>
   )
 }

@@ -11,6 +11,7 @@ use App\Models\Group;
 use App\Models\Schedule;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -31,14 +32,8 @@ class SchedulesController extends Controller
             ->with('parent');
 
         if ($month = ($validated['month'] ?? null)) {
-            // Filter by month boundaries using created_at or period specifics is ambiguous
-            // We'll filter schedules that are active within the month (by end_date or single_date if one_time)
-            $start = \Carbon\Carbon::createFromFormat('Y-m', $month)->startOfMonth();
-            $end = (clone $start)->endOfMonth();
-
-            $query->where(function ($q) use ($start, $end) {
-                $q->whereNull('end_date')->orWhereBetween('end_date', [$start, $end]);
-            });
+            // Budget page requirement: show all incomes and all expenses (including unassigned) for the group.
+            // Keep month only for page title and URL state; do not filter schedules by month here.
         }
 
         $schedules = $query->orderBy('type')->orderBy('id')->get();
@@ -58,7 +53,9 @@ class SchedulesController extends Controller
         Gate::authorize('view', $group);
 
         if (($validated['type'] ?? null) === ScheduleType::EXPENSE->value && empty($validated['parent_id'])) {
-            return response()->json(['message' => 'Expense must have parent_id (income)'], 422);
+            throw ValidationException::withMessages([
+                'parent_id' => ['Expense must have parent_id (income)'],
+            ]);
         }
 
         $schedule = new Schedule($validated);
@@ -72,17 +69,13 @@ class SchedulesController extends Controller
         return redirect()->back()->with('success', 'Создано');
     }
 
-    public function update(UpdateScheduleRequest $request, Schedule $schedule): InertiaResponse
+    public function update(UpdateScheduleRequest $request, Schedule $schedule): RedirectResponse
     {
         Gate::authorize('update', $schedule);
 
         $validated = $request->validated();
 
         $schedule->fill($validated)->save();
-
-        if ($request->wantsJson() || $request->is('api/*')) {
-            return response()->json(['data' => $schedule->fresh('parent')]);
-        }
 
         return redirect()->back()->with('success', 'Сохранено');
     }
