@@ -22,7 +22,7 @@ class SchedulePolicy
 
     public function update(User $user, Schedule $schedule): bool
     {
-        return $schedule->group->owner_id === $user->id;
+        return $schedule->group->members()->where('user_id', $user->id)->exists();
     }
 
     public function delete(User $user, Schedule $schedule): bool

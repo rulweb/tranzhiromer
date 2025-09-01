@@ -18,8 +18,7 @@ class CorrectionPolicy
 
     public function update(User $user, Correction $correction): bool
     {
-        // Только владелец группы может редактировать
-        return $correction->schedule->group->owner_id === $user->id;
+        return $correction->schedule->group->members()->where('user_id', $user->id)->exists();
     }
 
     public function delete(User $user, Correction $correction): bool
