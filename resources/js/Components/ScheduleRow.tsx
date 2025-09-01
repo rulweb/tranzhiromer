@@ -97,55 +97,55 @@ export default function ScheduleRow({
 								</Popover>
 							</div>
 						</div>
-						<div className='hidden sm:block text-xs text-gray-500'>
-							{schedule.description}
+						<div className='hidden sm:flex text-xs text-gray-500'>
+							<div>{formatPeriodicity(schedule)}</div>
+							{schedule.description && <div>, {schedule.description}</div>}
 						</div>
 					</div>
 				</div>
-				<div className='flex items-center gap-2'>
-					{/* Paid status */}
-					{isExpense && (
-						<div className='flex items-center gap-1 text-xs'>
-							{schedule.is_paid ? (
-								<span className='inline-flex items-center text-green-600'>
-									<CheckCircle
-										size={14}
-										className='mr-1'
-									/>{' '}
-									Оплачен
-								</span>
-							) : (
-								<span className='text-amber-600'>Не оплачен</span>
-							)}
+				<div className='flex items-center gap-4'>
+					<div className='flex flex-col items-end'>
+						{isExpense && schedule.expected_leftover != null && (
+							<div className='text-xs text-gray-600'>
+								Остаток:{' '}
+								{Number(schedule.expected_leftover).toLocaleString('ru-RU')} ₽
+							</div>
+						)}
+						<div
+							className={
+								'text-sm font-semibold ' +
+								(isExpense ? 'text-red-600' : 'text-green-700')
+							}
+						>
+							{isExpense ? '-' : '+'}
+							{Number(schedule.amount).toLocaleString('ru-RU')}
 						</div>
-					)}
-					{/* Desktop: periodicity between name and amount */}
-					<div className='hidden sm:block text-xs text-gray-600'>
-						{formatPeriodicity(schedule)}
+						{/* Paid status */}
+						{isExpense && (
+							<div className='flex items-center gap-1 text-xs'>
+								{schedule.is_paid ? (
+									<span className='inline-flex items-center text-green-600'>
+										<CheckCircle
+											size={14}
+											className='mr-1'
+										/>{' '}
+										Оплачен
+									</span>
+								) : (
+									<span className='text-amber-600'>Не оплачен</span>
+								)}
+							</div>
+						)}
 					</div>
- 				<div
- 					className={
- 						'text-sm font-semibold ' +
- 						(isExpense ? 'text-red-600' : 'text-green-700')
- 					}
- 				>
- 					{isExpense ? '-' : '+'}
- 					{Number(schedule.amount).toLocaleString('ru-RU')}
- 				</div>
- 				{isExpense && schedule.expected_leftover != null && (
- 					<div className='text-xs text-gray-600'>
- 						Остаток: {Number(schedule.expected_leftover).toLocaleString('ru-RU')} ₽
- 					</div>
- 				)}
- 				{isExpense && !schedule.is_paid && (
- 					<Button
- 						size='sm'
- 						variant='flat'
- 						onPress={() => onPaid?.(schedule)}
- 					>
- 						Оплатить
- 					</Button>
- 				)}
+					{isExpense && !schedule.is_paid && (
+						<Button
+							size='sm'
+							variant='flat'
+							onPress={() => onPaid?.(schedule)}
+						>
+							Оплатить
+						</Button>
+					)}
 					{onMove && (
 						<Button
 							isIconOnly
