@@ -18,7 +18,7 @@ import {
 	User
 } from '@heroui/react'
 import { Link, router, usePage } from '@inertiajs/react'
-import { ChevronDown, LogOut, Pencil } from 'lucide-react'
+import { ChevronDown, LogOut, Pencil, Home, Wallet } from 'lucide-react'
 import { PropsWithChildren, useMemo, useState } from 'react'
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal'
 
@@ -354,7 +354,35 @@ export default function LkLayout({ children }: PropsWithChildren) {
 				}}
 			/>
 
-			<div className='mx-auto max-w-4xl px-4 sm:px-6 py-6'>{children}</div>
+			<div className='mx-auto max-w-4xl px-4 sm:px-6 pt-6 pb-24 sm:pb-6'>{children}</div>
+
+			{/* Mobile bottom navigation */}
+			<nav className='sm:hidden fixed bottom-0 inset-x-0 z-40 border-t border-default-200 bg-white/95 backdrop-blur'>
+				<div className='mx-auto max-w-4xl px-6'>
+					<ul className='flex items-stretch justify-around h-14'>
+						<li>
+							<Link
+								href='/lk'
+								className={'flex flex-col items-center justify-center gap-1 text-xs h-full ' + (isActive({ href: '/lk' }) ? 'text-primary-600' : 'text-foreground-500')}
+								aria-current={isActive({ href: '/lk' }) ? 'page' : undefined}
+							>
+								<Home size={18} />
+								<span>Дашборд</span>
+							</Link>
+						</li>
+						<li>
+							<Link
+								href='/lk/budget'
+								className={'flex flex-col items-center justify-center gap-1 text-xs h-full ' + (isActive({ href: '/lk/budget' }) ? 'text-primary-600' : 'text-foreground-500')}
+								aria-current={isActive({ href: '/lk/budget' }) ? 'page' : undefined}
+							>
+								<Wallet size={18} />
+								<span>Бюджет</span>
+							</Link>
+						</li>
+					</ul>
+				</div>
+			</nav>
 		</div>
 	)
 }

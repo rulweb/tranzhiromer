@@ -83,10 +83,11 @@ export default function BudgetIndex({
 	return (
 		<LkLayout>
 			<Head title={`Бюджет на ${dayjs(month + '-01').format('MMMM YYYY')}`} />
-			<div className='flex items-center justify-between mb-4'>
+			<div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4'>
 				<h1 className='text-xl font-semibold'>Бюджет на</h1>
-				<div className='flex items-center gap-2'>
+				<div className='flex flex-wrap items-center gap-2'>
 					<Button
+						size='sm'
 						variant='light'
 						onPress={() =>
 							setMonth(
@@ -100,10 +101,10 @@ export default function BudgetIndex({
 						&lt;
 					</Button>
 					<div>
-						<input
-							type='month'
-							className='rounded-medium border border-default-200 bg-content1 text-foreground px-2 py-1 text-sm'
-							value={month}
+ 					<input
+ 						type='month'
+ 						className='w-[140px] sm:w-auto rounded-medium border border-default-200 bg-content1 text-foreground px-2 py-1 text-sm'
+ 						value={month}
 							onChange={e => {
 								const val = e.target.value
 								if (dayjs(val + '-01').isValid()) {
@@ -114,6 +115,7 @@ export default function BudgetIndex({
 						/>
 					</div>
 					<Button
+						size='sm'
 						variant='light'
 						onPress={() =>
 							setMonth(
@@ -127,6 +129,7 @@ export default function BudgetIndex({
 						&gt;
 					</Button>
 					<Button
+						size='sm'
 						variant='bordered'
 						color='success'
 						onPress={() => setCreateIncomeOpen(true)}
@@ -134,6 +137,7 @@ export default function BudgetIndex({
 						Добавить доход
 					</Button>
 					<Button
+						size='sm'
 						color='danger'
 						variant='bordered'
 						onPress={() => setCreateExpenseOpen(true)}
