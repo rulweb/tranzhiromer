@@ -204,6 +204,25 @@ export default function ExpenseEditModal({
 									>
 										Отмена
 									</Button>
+									<div className='flex-1' />
+									<Button
+										color='danger'
+										variant='bordered'
+										onPress={() => {
+											if (processing) { return }
+											if (!confirm('Удалить этот расход?')) { return }
+											router.delete(`/lk/schedules/${expense.id}`, {
+												preserveScroll: true,
+												onSuccess: () => {
+													close()
+													router.reload({ only: ['schedules'] })
+												}
+											})
+										}}
+										disabled={processing}
+									>
+										Удалить
+									</Button>
 									<Button
 										color='primary'
 										type='submit'
