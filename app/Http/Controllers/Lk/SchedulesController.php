@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Lk;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Lk\Schedules\PayScheduleRequest;
 use App\Http\Requests\Lk\Schedules\SchedulesIndexRequest;
 use App\Http\Requests\Lk\Schedules\StoreScheduleRequest;
 use App\Http\Requests\Lk\Schedules\UpdateScheduleRequest;
@@ -92,5 +93,17 @@ class SchedulesController extends Controller
         $schedule->delete();
 
         return redirect()->back()->with('success', 'Удалено');
+    }
+
+    public function pay(PayScheduleRequest $request, Schedule $schedule): \Illuminate\Http\RedirectResponse
+    {
+        Gate::authorize('update', $schedule);
+
+        $data = $request->validated();
+        $schedule->is_paid = true;
+        $schedule->expected_leftover = $data['leftover'];
+        $schedule->save();
+
+        return redirect()->back()->with('success', 'Оплата отмечена');
     }
 }

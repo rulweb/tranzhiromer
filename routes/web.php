@@ -29,6 +29,7 @@ Route::middleware('web')->group(function () {
         // Schedules CRUD via Inertia
         Route::post('schedules', [\App\Http\Controllers\Lk\SchedulesController::class, 'store'])->name('lk.schedules.store');
         Route::patch('schedules/{schedule}', [\App\Http\Controllers\Lk\SchedulesController::class, 'update'])->name('lk.schedules.update');
+        Route::post('schedules/{schedule}/pay', [\App\Http\Controllers\Lk\SchedulesController::class, 'pay'])->name('lk.schedules.pay');
         Route::delete('schedules/{schedule}', [\App\Http\Controllers\Lk\SchedulesController::class, 'destroy'])->name('lk.schedules.destroy');
 
         // Corrections via Inertia

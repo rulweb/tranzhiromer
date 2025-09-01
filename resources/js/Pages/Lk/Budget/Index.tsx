@@ -1,8 +1,10 @@
 import { Button } from '@heroui/react'
+import { Input } from '@heroui/react'
 import { Head, router } from '@inertiajs/react'
 import dayjs from 'dayjs'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
+import ConfirmPayModal from '../../../Components/ConfirmPayModal'
 import ExpenseCreateModal from '../../../Components/ExpenseCreateModal'
 import ExpenseEditModal from '../../../Components/ExpenseEditModal'
 import IncomeCreateModal from '../../../Components/IncomeCreateModal'
@@ -32,6 +34,9 @@ export default function BudgetIndex({
 	const [editingIncome, setEditingIncome] = useState<Schedule | null>(null)
 	const [editExpenseOpen, setEditExpenseOpen] = useState<boolean>(false)
 	const [editingExpense, setEditingExpense] = useState<Schedule | null>(null)
+	const [payOpen, setPayOpen] = useState<boolean>(false)
+	const [payingExpense, setPayingExpense] = useState<Schedule | null>(null)
+	const [payLeftover, setPayLeftover] = useState<string>('0')
 
 	// Keep schedules in sync with server props when they change
 	useEffect(() => {
@@ -164,6 +169,15 @@ export default function BudgetIndex({
 										setEditingExpense(s)
 										setEditExpenseOpen(true)
 									}}
+									onPaid={s => {
+										setPayingExpense(s)
+										setPayLeftover(
+											s.expected_leftover != null
+												? String(s.expected_leftover)
+												: '0'
+										)
+										setPayOpen(true)
+									}}
 								/>
 							))}
 						</div>
@@ -188,6 +202,13 @@ export default function BudgetIndex({
 						onEditExpense={expSel => {
 							setEditingExpense(expSel)
 							setEditExpenseOpen(true)
+						}}
+						onPayExpense={s => {
+							setPayingExpense(s)
+							setPayLeftover(
+								s.expected_leftover != null ? String(s.expected_leftover) : '0'
+							)
+							setPayOpen(true)
 						}}
 					/>
 				))}
@@ -221,6 +242,39 @@ export default function BudgetIndex({
 				onOpenChange={setEditExpenseOpen}
 				expense={editingExpense}
 			/>
+
+			<ConfirmPayModal
+				isOpen={payOpen}
+				onOpenChange={setPayOpen}
+				title='Подтверждение оплаты'
+				description='Укажите остаток и подтвердите проведение оплаты.'
+				confirmText='Отметить как оплачено'
+				onConfirm={async () => {
+					if (!payingExpense) return
+					await router.post(
+						`/lk/schedules/${payingExpense.id}/pay`,
+						{ leftover: payLeftover },
+						{
+							preserveScroll: true,
+							onSuccess: () => {
+								setPayingExpense(null)
+								setPayLeftover('')
+								router.reload({ only: ['schedules'] })
+							}
+						}
+					)
+				}}
+			>
+				<div className='mt-2'>
+					<Input
+						label='Остаток'
+						type='number'
+						step='0.01'
+						value={payLeftover}
+						onChange={e => setPayLeftover(e.target.value)}
+					/>
+				</div>
+			</ConfirmPayModal>
 		</LkLayout>
 	)
 }

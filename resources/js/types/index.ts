@@ -23,6 +23,7 @@ export type Group = {
 		period_type: 'daily' | 'weekly' | 'monthly' | 'one_time'
 		amount: number
 		expected_leftover: number | null
+		is_paid?: boolean
 		day_of_month?: number
 		day_of_week?: number
 		time_of_day?: string

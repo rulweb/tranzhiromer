@@ -7,7 +7,7 @@ import {
 	PopoverTrigger
 } from '@heroui/react'
 import dayjs from 'dayjs'
-import { Info, MoveVertical, Pencil } from 'lucide-react'
+import { CheckCircle, Info, MoveVertical, Pencil } from 'lucide-react'
 
 import { Schedule } from '../types'
 
@@ -17,6 +17,7 @@ export type ScheduleRowProps = {
 	schedule: Schedule
 	onEdit?: (s: Schedule) => void
 	onMove?: (s: Schedule) => void
+	onPaid?: (s: Schedule) => void
 	isExpense?: boolean
 }
 
@@ -44,6 +45,7 @@ export default function ScheduleRow({
 	schedule,
 	onEdit,
 	onMove,
+	onPaid,
 	isExpense
 }: ScheduleRowProps) {
 	const end = schedule.end_date ? dayjs(schedule.end_date) : null
@@ -101,6 +103,22 @@ export default function ScheduleRow({
 					</div>
 				</div>
 				<div className='flex items-center gap-2'>
+					{/* Paid status */}
+					{isExpense && (
+						<div className='flex items-center gap-1 text-xs'>
+							{schedule.is_paid ? (
+								<span className='inline-flex items-center text-green-600'>
+									<CheckCircle
+										size={14}
+										className='mr-1'
+									/>{' '}
+									Оплачен
+								</span>
+							) : (
+								<span className='text-amber-600'>Не оплачен</span>
+							)}
+						</div>
+					)}
 					{/* Desktop: periodicity between name and amount */}
 					<div className='hidden sm:block text-xs text-gray-600'>
 						{formatPeriodicity(schedule)}
@@ -114,6 +132,15 @@ export default function ScheduleRow({
 						{isExpense ? '-' : '+'}
 						{Number(schedule.amount).toLocaleString('ru-RU')}
 					</div>
+					{isExpense && !schedule.is_paid && (
+						<Button
+							size='sm'
+							variant='flat'
+							onPress={() => onPaid?.(schedule)}
+						>
+							Оплатить
+						</Button>
+					)}
 					{onMove && (
 						<Button
 							isIconOnly

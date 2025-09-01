@@ -1,4 +1,12 @@
-import { Button, Card, CardBody, CardHeader, Popover, PopoverContent, PopoverTrigger } from '@heroui/react'
+import {
+	Button,
+	Card,
+	CardBody,
+	CardHeader,
+	Popover,
+	PopoverContent,
+	PopoverTrigger
+} from '@heroui/react'
 import dayjs from 'dayjs'
 import { Info } from 'lucide-react'
 import { useMemo, useState } from 'react'
@@ -66,6 +74,7 @@ export type IncomeGroupProps = {
 	onEditIncome?: (s: Schedule) => void
 	onEditExpense?: (s: Schedule) => void
 	onMoveExpense?: (s: Schedule) => void
+	onPayExpense?: (s: Schedule) => void
 }
 
 function formatPeriodicity(s: Schedule): string {
@@ -93,7 +102,8 @@ export default function IncomeGroup({
 	expenses,
 	onEditIncome,
 	onEditExpense,
-	onMoveExpense
+	onMoveExpense,
+	onPayExpense
 }: IncomeGroupProps) {
 	const [open, setOpen] = useState(true)
 	const totalExpenses = useMemo(
@@ -113,7 +123,12 @@ export default function IncomeGroup({
 							<div className='sm:hidden'>
 								<Popover placement='bottom-start'>
 									<PopoverTrigger>
-										<Button isIconOnly size='sm' variant='light' aria-label='Подробнее'>
+										<Button
+											isIconOnly
+											size='sm'
+											variant='light'
+											aria-label='Подробнее'
+										>
 											<Info size={16} />
 										</Button>
 									</PopoverTrigger>
@@ -129,7 +144,9 @@ export default function IncomeGroup({
 												</div>
 											)}
 											<div className='mt-2'>
-												<div className='text-xs uppercase text-gray-500'>Описание</div>
+												<div className='text-xs uppercase text-gray-500'>
+													Описание
+												</div>
 												<div className='text-sm'>
 													{income.description ? income.description : '—'}
 												</div>
@@ -229,6 +246,7 @@ export default function IncomeGroup({
 												isExpense
 												onMove={onMoveExpense}
 												onEdit={onEditExpense}
+												onPaid={onPayExpense}
 											/>
 										))}
 									</div>
