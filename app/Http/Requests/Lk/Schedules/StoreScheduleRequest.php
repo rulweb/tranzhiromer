@@ -29,6 +29,7 @@ class StoreScheduleRequest extends FormRequest
             'time_of_day' => ['nullable', 'string', 'max:10', Rule::requiredIf(fn () => $this->input('period_type') === SchedulePeriodType::DAILY->value)],
             'single_date' => ['nullable', 'date', Rule::requiredIf(fn () => $this->input('period_type') === SchedulePeriodType::ONE_TIME->value)],
             'amount' => ['required', 'numeric'],
+            'expected_leftover' => ['nullable', 'numeric'],
             'end_date' => ['nullable', 'date'],
         ];
     }

@@ -20,6 +20,7 @@ import {
 import { Link, router, usePage } from '@inertiajs/react'
 import { ChevronDown, LogOut, Pencil } from 'lucide-react'
 import { PropsWithChildren, useMemo, useState } from 'react'
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal'
 
 function InviteForm({ groupId }: { groupId: number }) {
 	const [email, setEmail] = useState('')
@@ -69,6 +70,7 @@ export default function LkLayout({ children }: PropsWithChildren) {
 	const [editOpen, setEditOpen] = useState(false)
 	const [newGroupName, setNewGroupName] = useState('')
 	const [editName, setEditName] = useState(currentGroup?.name ?? '')
+	const [deleteModalOpen, setDeleteModalOpen] = useState(false)
 
 	const handleLogout = () => {
 		router.post('/lk/logout')
@@ -314,6 +316,14 @@ export default function LkLayout({ children }: PropsWithChildren) {
 								>
 									Отмена
 								</Button>
+ 							{/* Delete group with confirmation modal */}
+ 							<Button
+ 								color='danger'
+ 								variant='flat'
+ 								onPress={() => setDeleteModalOpen(true)}
+ 							>
+ 								Удалить группу
+ 							</Button>
 								<Button
 									color='primary'
 									onPress={saveEdit}
@@ -325,6 +335,24 @@ export default function LkLayout({ children }: PropsWithChildren) {
 					)}
 				</ModalContent>
 			</Modal>
+
+			<ConfirmDeleteModal
+				isOpen={deleteModalOpen}
+				onOpenChange={setDeleteModalOpen}
+				title='Удалить группу?'
+				description='Вы уверены, что хотите удалить эту группу? Это действие необратимо и удалит все связанные данные.'
+				confirmText='Удалить'
+				onConfirm={async () => {
+					if (!currentGroup) return
+					await router.delete(`/lk/groups/${currentGroup.id}`, {
+						preserveScroll: true,
+						onSuccess: () => {
+							setEditOpen(false)
+							setDrawerOpen(false)
+						}
+					})
+				}}
+			/>
 
 			<div className='mx-auto max-w-4xl px-4 sm:px-6 py-6'>{children}</div>
 		</div>

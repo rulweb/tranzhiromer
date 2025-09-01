@@ -13,12 +13,12 @@ import {
 } from '@heroui/react'
 import { Form, router } from '@inertiajs/react'
 import { type DateValue, parseDate } from '@internationalized/date'
-import { normalizeToCalendarDate } from '@/utils/date'
 import { useEffect, useMemo, useState } from 'react'
 
 import { Schedule } from '../types'
 
 import ConfirmDeleteModal from './ConfirmDeleteModal'
+import { normalizeToCalendarDate } from '@/utils/date'
 
 const iconOptions = [
 	'home',
@@ -54,7 +54,7 @@ export default function ExpenseEditModal({
 		if (expense) {
 			setIcon(expense.icon || '')
 			setPeriodType(expense.period_type)
-   setSingleDate(normalizeToCalendarDate(expense.single_date))
+			setSingleDate(normalizeToCalendarDate(expense.single_date))
 			setEndDate(normalizeToCalendarDate(expense.end_date))
 		}
 	}, [expense])
@@ -119,6 +119,19 @@ export default function ExpenseEditModal({
 										isRequired
 										isInvalid={Boolean((errors as any)?.amount)}
 										errorMessage={(errors as any)?.amount}
+									/>
+									<Input
+										name='expected_leftover'
+										type='number'
+										step='0.01'
+										label='Ожидаемый остаток (опционально)'
+										defaultValue={
+											expense.expected_leftover != null
+												? String(expense.expected_leftover)
+												: ''
+										}
+										isInvalid={Boolean((errors as any)?.expected_leftover)}
+										errorMessage={(errors as any)?.expected_leftover}
 									/>
 									<Textarea
 										name='description'

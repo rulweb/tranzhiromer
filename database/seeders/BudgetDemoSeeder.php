@@ -29,9 +29,6 @@ class BudgetDemoSeeder extends Seeder
                 'owner_id' => $user->id,
             ]);
 
-        // Добавляем владельца в group_user
-        $group->members()->attach($user->id, ['role' => 'owner']);
-
         // Доход: Основная зарплата
         $salary = Schedule::factory()
             ->group($group->id)

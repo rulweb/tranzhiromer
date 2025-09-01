@@ -1,5 +1,6 @@
 import {
 	Button,
+	DatePicker,
 	Input,
 	Modal,
 	ModalBody,
@@ -8,12 +9,11 @@ import {
 	ModalHeader,
 	Select,
 	SelectItem,
-	Textarea,
-	DatePicker
+	Textarea
 } from '@heroui/react'
 import { Form, router } from '@inertiajs/react'
+import { type DateValue, parseDate } from '@internationalized/date'
 import { useMemo, useState } from 'react'
-import { parseDate, type DateValue } from '@internationalized/date'
 
 import { Schedule } from '../types'
 
@@ -105,6 +105,16 @@ export default function ExpenseCreateModal({
 										isInvalid={Boolean((errors as any)?.amount)}
 										errorMessage={(errors as any)?.amount}
 									/>
+
+									<Input
+										name='expected_leftover'
+										type='number'
+										step='0.01'
+										label='Ожидаемый остаток (опционально)'
+										isInvalid={Boolean((errors as any)?.expected_leftover)}
+										errorMessage={(errors as any)?.expected_leftover}
+									/>
+
 									<Textarea
 										name='description'
 										label='Описание'
@@ -175,10 +185,18 @@ export default function ExpenseCreateModal({
 											label='День месяца'
 										/>
 									)}
-         {periodFields === 'one_time' && (
+									{periodFields === 'one_time' && (
 										<>
-											<DatePicker label='Дата' value={singleDate ?? undefined} onChange={setSingleDate} />
-											<input type='hidden' name='single_date' value={singleDate ? singleDate.toString() : ''} />
+											<DatePicker
+												label='Дата'
+												value={singleDate ?? undefined}
+												onChange={setSingleDate}
+											/>
+											<input
+												type='hidden'
+												name='single_date'
+												value={singleDate ? singleDate.toString() : ''}
+											/>
 										</>
 									)}
 									{periodFields === 'daily' && (
@@ -188,10 +206,18 @@ export default function ExpenseCreateModal({
 											label='Время'
 										/>
 									)}
-         {periodFields !== 'one_time' && (
+									{periodFields !== 'one_time' && (
 										<>
-											<DatePicker label='Дата окончания' value={endDate ?? undefined} onChange={setEndDate} />
-											<input type='hidden' name='end_date' value={endDate ? endDate.toString() : ''} />
+											<DatePicker
+												label='Дата окончания'
+												value={endDate ?? undefined}
+												onChange={setEndDate}
+											/>
+											<input
+												type='hidden'
+												name='end_date'
+												value={endDate ? endDate.toString() : ''}
+											/>
 										</>
 									)}
 								</ModalBody>

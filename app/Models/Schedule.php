@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read int|null $corrections_count
  * @property-read \App\Models\Group $group
  * @property-read Schedule|null $parent
+ *
  * @method static \Database\Factories\ScheduleFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Schedule newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Schedule newQuery()
@@ -46,6 +47,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Schedule whereTimeOfDay($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Schedule whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Schedule whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class Schedule extends Model
@@ -66,6 +68,7 @@ class Schedule extends Model
         'time_of_day',
         'single_date',
         'amount',
+        'expected_leftover',
         'end_date',
     ];
 

@@ -16,6 +16,15 @@ use Inertia\Response as InertiaResponse;
 
 class GroupsController extends Controller
 {
+    public function destroy(Request $request, Group $group): RedirectResponse
+    {
+        Gate::authorize('delete', $group);
+
+        $group->delete();
+
+        return redirect()->route('lk.index')->with('success', 'Группа удалена');
+    }
+
     public function setCurrent(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -83,12 +92,7 @@ class GroupsController extends Controller
             'owner_id' => $request->user()->id,
         ]);
 
-        // attach owner as member
-        $group->members()->attach($request->user()->id, [
-            'role' => 'owner',
-            'joined_at' => now(),
-        ]);
-
+        // Owner will be attached by the GroupObserver
         return redirect()->back()->with('success', 'Группа создана');
     }
 
@@ -100,9 +104,9 @@ class GroupsController extends Controller
 
         $user = User::where('email', $validated['email'])->first();
 
-        if (!$user) {
+        if (! $user) {
             throw ValidationException::withMessages([
-                'email' => ['Пользователь не найден']
+                'email' => ['Пользователь не найден'],
             ]);
         }
 

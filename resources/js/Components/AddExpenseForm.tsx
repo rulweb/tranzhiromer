@@ -61,6 +61,15 @@ export default function AddExpenseForm({
 						isInvalid={Boolean((errors as any)?.amount)}
 						errorMessage={(errors as any)?.amount}
 					/>
+					<Input
+						name='expected_leftover'
+						label='Ожидаемый остаток'
+						type='number'
+						step='0.01'
+						className='sm:w-44'
+						isInvalid={Boolean((errors as any)?.expected_leftover)}
+						errorMessage={(errors as any)?.expected_leftover}
+					/>
 					<Select
 						selectedKeys={icon ? [icon] : []}
 						label='Иконка'

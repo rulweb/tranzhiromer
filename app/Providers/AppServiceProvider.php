@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Correction;
 use App\Models\Group;
 use App\Models\Schedule;
+use App\Observers\GroupObserver;
 use App\Policies\CorrectionPolicy;
 use App\Policies\GroupPolicy;
 use App\Policies\SchedulePolicy;
@@ -40,8 +41,12 @@ class AppServiceProvider extends ServiceProvider
             $event->extendSocialite('yandex', \SocialiteProviders\Yandex\Provider::class);
         });
 
+        // Policies
         Gate::policy(Group::class, GroupPolicy::class);
         Gate::policy(Schedule::class, SchedulePolicy::class);
         Gate::policy(Correction::class, CorrectionPolicy::class);
+
+        // Model Observers
+        Group::observe(GroupObserver::class);
     }
 }
