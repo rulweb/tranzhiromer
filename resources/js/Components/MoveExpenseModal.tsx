@@ -61,12 +61,7 @@ export default function MoveExpenseModal({
 								onChange={e => setTargetId(e.target.value)}
 							>
 								{options.map(i => (
-									<SelectItem
-										key={String(i.id)}
-										value={String(i.id)}
-									>
-										{i.name}
-									</SelectItem>
+									<SelectItem key={String(i.id)}>{i.name}</SelectItem>
 								))}
 							</Select>
 						</ModalBody>

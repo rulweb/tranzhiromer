@@ -9,6 +9,7 @@ use App\Http\Requests\Lk\Schedules\StoreScheduleRequest;
 use App\Http\Requests\Lk\Schedules\UpdateScheduleRequest;
 use App\Models\Group;
 use App\Models\Schedule;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
@@ -32,8 +33,12 @@ class SchedulesController extends Controller
             ->with('parent');
 
         if ($month = ($validated['month'] ?? null)) {
-            // Budget page requirement: show all incomes and all expenses (including unassigned) for the group.
-            // Keep month only for page title and URL state; do not filter schedules by month here.
+            $time = Carbon::createFromFormat('Y-m', $month);
+
+            $query->where(function ($q) use ($time) {
+                $q->whereBetween('end_date', [$time->startOfMonth()->toAtomString(), $time->endOfMonth()->toAtomString()]);
+                $q->orWhereNull('end_date');
+            });
         }
 
         $schedules = $query->orderBy('type')->orderBy('id')->get();

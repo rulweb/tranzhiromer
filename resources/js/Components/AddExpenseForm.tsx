@@ -68,12 +68,7 @@ export default function AddExpenseForm({
 						className='sm:w-44'
 					>
 						{iconOptions.map(key => (
-							<SelectItem
-								key={key}
-								value={key}
-							>
-								{key}
-							</SelectItem>
+							<SelectItem key={key}>{key}</SelectItem>
 						))}
 					</Select>
 					<input

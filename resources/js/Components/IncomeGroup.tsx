@@ -74,7 +74,7 @@ export default function IncomeGroup({
 	onEditExpense,
 	onMoveExpense
 }: IncomeGroupProps) {
-	const [open, setOpen] = useState(false)
+	const [open, setOpen] = useState(true)
 	const totalExpenses = useMemo(
 		() => expenses.reduce((sum, e) => sum + Number(e.amount), 0),
 		[expenses]

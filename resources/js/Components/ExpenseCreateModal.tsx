@@ -117,10 +117,7 @@ export default function ExpenseCreateModal({
 										errorMessage={(errors as any)?.parent_id}
 									>
 										{incomes.map(inc => (
-											<SelectItem
-												key={String(inc.id)}
-												value={String(inc.id)}
-											>
+											<SelectItem key={String(inc.id)}>
 												{inc.name} ·{' '}
 												{Number(inc.amount).toLocaleString('ru-RU')} ₽
 											</SelectItem>
@@ -134,12 +131,7 @@ export default function ExpenseCreateModal({
 											onChange={e => setIcon(e.target.value)}
 										>
 											{iconOptions.map(key => (
-												<SelectItem
-													key={key}
-													value={key}
-												>
-													{key}
-												</SelectItem>
+												<SelectItem key={key}>{key}</SelectItem>
 											))}
 										</Select>
 										<Select
@@ -147,30 +139,10 @@ export default function ExpenseCreateModal({
 											selectedKeys={[periodType]}
 											onChange={e => setPeriodType(e.target.value as any)}
 										>
-											<SelectItem
-												key='daily'
-												value='daily'
-											>
-												Ежедневно
-											</SelectItem>
-											<SelectItem
-												key='weekly'
-												value='weekly'
-											>
-												Еженедельно
-											</SelectItem>
-											<SelectItem
-												key='monthly'
-												value='monthly'
-											>
-												Ежемесячно
-											</SelectItem>
-											<SelectItem
-												key='one_time'
-												value='one_time'
-											>
-												Разово
-											</SelectItem>
+											<SelectItem key='daily'>Ежедневно</SelectItem>
+											<SelectItem key='weekly'>Еженедельно</SelectItem>
+											<SelectItem key='monthly'>Ежемесячно</SelectItem>
+											<SelectItem key='one_time'>Разово</SelectItem>
 										</Select>
 									</div>
 									<input
@@ -184,48 +156,13 @@ export default function ExpenseCreateModal({
 											name='day_of_week'
 											label='День недели'
 										>
-											<SelectItem
-												key='1'
-												value='1'
-											>
-												Понедельник
-											</SelectItem>
-											<SelectItem
-												key='2'
-												value='2'
-											>
-												Вторник
-											</SelectItem>
-											<SelectItem
-												key='3'
-												value='3'
-											>
-												Среда
-											</SelectItem>
-											<SelectItem
-												key='4'
-												value='4'
-											>
-												Четверг
-											</SelectItem>
-											<SelectItem
-												key='5'
-												value='5'
-											>
-												Пятница
-											</SelectItem>
-											<SelectItem
-												key='6'
-												value='6'
-											>
-												Суббота
-											</SelectItem>
-											<SelectItem
-												key='0'
-												value='0'
-											>
-												Воскресенье
-											</SelectItem>
+											<SelectItem key='1'>Понедельник</SelectItem>
+											<SelectItem key='2'>Вторник</SelectItem>
+											<SelectItem key='3'>Среда</SelectItem>
+											<SelectItem key='4'>Четверг</SelectItem>
+											<SelectItem key='5'>Пятница</SelectItem>
+											<SelectItem key='6'>Суббота</SelectItem>
+											<SelectItem key='0'>Воскресенье</SelectItem>
 										</Select>
 									)}
 									{periodFields === 'monthly' && (

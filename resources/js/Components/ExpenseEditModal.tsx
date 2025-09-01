@@ -124,12 +124,7 @@ export default function ExpenseEditModal({
 											onChange={e => setIcon(e.target.value)}
 										>
 											{iconOptions.map(key => (
-												<SelectItem
-													key={key}
-													value={key}
-												>
-													{key}
-												</SelectItem>
+												<SelectItem key={key}>{key}</SelectItem>
 											))}
 										</Select>
 										<Select
@@ -137,30 +132,10 @@ export default function ExpenseEditModal({
 											selectedKeys={[periodType]}
 											onChange={e => setPeriodType(e.target.value as any)}
 										>
-											<SelectItem
-												key='daily'
-												value='daily'
-											>
-												Ежедневно
-											</SelectItem>
-											<SelectItem
-												key='weekly'
-												value='weekly'
-											>
-												Еженедельно
-											</SelectItem>
-											<SelectItem
-												key='monthly'
-												value='monthly'
-											>
-												Ежемесячно
-											</SelectItem>
-											<SelectItem
-												key='one_time'
-												value='one_time'
-											>
-												Разово
-											</SelectItem>
+											<SelectItem key='daily'>Ежедневно</SelectItem>
+											<SelectItem key='weekly'>Еженедельно</SelectItem>
+											<SelectItem key='monthly'>Ежемесячно</SelectItem>
+											<SelectItem key='one_time'>Разово</SelectItem>
 										</Select>
 									</div>
 									<input
@@ -175,48 +150,13 @@ export default function ExpenseEditModal({
 											label='День недели'
 											selectedKeys={[(expense.day_of_week ?? '').toString()]}
 										>
-											<SelectItem
-												key='1'
-												value='1'
-											>
-												Понедельник
-											</SelectItem>
-											<SelectItem
-												key='2'
-												value='2'
-											>
-												Вторник
-											</SelectItem>
-											<SelectItem
-												key='3'
-												value='3'
-											>
-												Среда
-											</SelectItem>
-											<SelectItem
-												key='4'
-												value='4'
-											>
-												Четверг
-											</SelectItem>
-											<SelectItem
-												key='5'
-												value='5'
-											>
-												Пятница
-											</SelectItem>
-											<SelectItem
-												key='6'
-												value='6'
-											>
-												Суббота
-											</SelectItem>
-											<SelectItem
-												key='0'
-												value='0'
-											>
-												Воскресенье
-											</SelectItem>
+											<SelectItem key='1'>Понедельник</SelectItem>
+											<SelectItem key='2'>Вторник</SelectItem>
+											<SelectItem key='3'>Среда</SelectItem>
+											<SelectItem key='4'>Четверг</SelectItem>
+											<SelectItem key='5'>Пятница</SelectItem>
+											<SelectItem key='6'>Суббота</SelectItem>
+											<SelectItem key='0'>Воскресенье</SelectItem>
 										</Select>
 									)}
 									{periodFields === 'monthly' && (
