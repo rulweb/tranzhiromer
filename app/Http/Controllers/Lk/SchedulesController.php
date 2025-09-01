@@ -58,6 +58,11 @@ class SchedulesController extends Controller
             ]);
         }
 
+        // Normalize one-time: end_date equals single_date
+        if (($validated['period_type'] ?? null) === 'one_time') {
+            $validated['end_date'] = $validated['single_date'] ?? null;
+        }
+
         $schedule = new Schedule($validated);
         $schedule->group_id = $group->id;
 
@@ -74,6 +79,10 @@ class SchedulesController extends Controller
         Gate::authorize('update', $schedule);
 
         $validated = $request->validated();
+
+        if (($validated['period_type'] ?? null) === 'one_time') {
+            $validated['end_date'] = $validated['single_date'] ?? null;
+        }
 
         $schedule->fill($validated)->save();
 
