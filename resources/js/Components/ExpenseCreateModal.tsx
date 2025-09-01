@@ -110,17 +110,14 @@ export default function ExpenseCreateModal({
 
 									<Select
 										label='Привязать к доходу'
-										selectedKeys={parentId ? [parentId] : []}
+										selectedKeys={[parentId]}
 										onChange={e => setParentId(e.target.value)}
 										isRequired
 										isInvalid={Boolean((errors as any)?.parent_id)}
 										errorMessage={(errors as any)?.parent_id}
 									>
 										{incomes.map(inc => (
-											<SelectItem key={String(inc.id)}>
-												{inc.name} ·{' '}
-												{Number(inc.amount).toLocaleString('ru-RU')} ₽
-											</SelectItem>
+											<SelectItem key={inc.id}>{inc.name}</SelectItem>
 										))}
 									</Select>
 

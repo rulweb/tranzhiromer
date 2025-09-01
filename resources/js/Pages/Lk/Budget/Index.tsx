@@ -1,14 +1,7 @@
-import {
-	Button,
-	Calendar,
-	Dropdown,
-	DropdownItem,
-	DropdownMenu,
-	DropdownTrigger
-} from '@heroui/react'
+import { Button } from '@heroui/react'
 import { Head, router } from '@inertiajs/react'
 import dayjs from 'dayjs'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import ExpenseCreateModal from '../../../Components/ExpenseCreateModal'
 import ExpenseEditModal from '../../../Components/ExpenseEditModal'
@@ -46,7 +39,12 @@ export default function BudgetIndex({
 	}, [initial])
 
 	// Refetch via Inertia when month changes (for the same group)
+	const didMountRef = useRef(false)
 	useEffect(() => {
+		if (!didMountRef.current) {
+			didMountRef.current = true
+			return
+		}
 		router.visit(`/lk/budget?month=${month}`, {
 			preserveScroll: true,
 			preserveState: true
