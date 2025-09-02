@@ -11,7 +11,7 @@ import {
 	SelectItem,
 	Textarea
 } from '@heroui/react'
-import { Form, router } from '@inertiajs/react'
+import { router, usePage } from '@inertiajs/react'
 import { type DateValue, parseDate } from '@internationalized/date'
 import { useEffect, useMemo, useState } from 'react'
 
@@ -49,6 +49,8 @@ export default function ExpenseEditModal({
 	const [confirmOpen, setConfirmOpen] = useState(false)
 	const [singleDate, setSingleDate] = useState<DateValue | null>(null)
 	const [endDate, setEndDate] = useState<DateValue | null>(null)
+	const [processing, setProcessing] = useState(false)
+	const { errors } = usePage().props as any
 
 	useEffect(() => {
 		if (expense) {
@@ -84,186 +86,191 @@ export default function ExpenseEditModal({
 		>
 			<ModalContent>
 				{close => (
-					<Form
+					<form
 						action={`/lk/schedules/${expense.id}`}
-						method='patch'
-						onSuccess={() => {
-							close()
-							router.reload({ only: ['schedules'] })
+						method='post'
+						onSubmit={e => {
+							e.preventDefault()
+							setProcessing(true)
+							const form = e.currentTarget as HTMLFormElement
+							const fd = new FormData(form)
+							fd.set('period_type', periodType)
+							fd.set('type', 'expense')
+							if (expense.parent_id) {
+								fd.set('parent_id', String(expense.parent_id))
+							}
+							router.patch(`/lk/schedules/${expense.id}`, fd, {
+								onSuccess: () => {
+									close()
+									router.reload({ only: ['schedules'] })
+								},
+								onFinish: () => setProcessing(false),
+								preserveScroll: true
+							})
 						}}
-						transform={data => ({
-							...data,
-							period_type: periodType,
-							type: 'expense',
-							parent_id: expense.parent_id
-						})}
 					>
-						{({ processing, errors }) => (
-							<>
-								<ModalHeader>Редактировать расход</ModalHeader>
-								<ModalBody className='flex flex-col gap-3'>
-									<Input
-										name='name'
-										label='Название'
-										defaultValue={expense.name}
-										isRequired
-										isInvalid={Boolean((errors as any)?.name)}
-										errorMessage={(errors as any)?.name}
+						<ModalHeader>Редактировать расход</ModalHeader>
+						<ModalBody className='flex flex-col gap-3'>
+							<Input
+								name='name'
+								label='Название'
+								defaultValue={expense.name}
+								isRequired
+								isInvalid={Boolean(errors?.name)}
+								errorMessage={errors?.name as any}
+							/>
+							<Input
+								name='amount'
+								type='number'
+								step='0.01'
+								label='Сумма'
+								defaultValue={String(expense.amount)}
+								isRequired
+								isInvalid={Boolean(errors?.amount)}
+								errorMessage={errors?.amount as any}
+							/>
+							<Input
+								name='expected_leftover'
+								type='number'
+								step='0.01'
+								label='Ожидаемый остаток (опционально)'
+								defaultValue={
+									expense.expected_leftover != null
+										? String(expense.expected_leftover)
+										: ''
+								}
+								isInvalid={Boolean(errors?.expected_leftover)}
+								errorMessage={errors?.expected_leftover as any}
+							/>
+							<Textarea
+								name='description'
+								label='Описание'
+								defaultValue={expense.description || ''}
+								isInvalid={Boolean(errors?.description)}
+								errorMessage={errors?.description as any}
+							/>
+							<div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+								<Select
+									label='Иконка'
+									selectedKeys={icon ? [icon] : []}
+									onChange={e => setIcon(e.target.value)}
+								>
+									{iconOptions.map(key => (
+										<SelectItem key={key}>{key}</SelectItem>
+									))}
+								</Select>
+								<Select
+									label='Периодичность'
+									selectedKeys={[periodType]}
+									onChange={e => setPeriodType(e.target.value as any)}
+								>
+									<SelectItem key='daily'>Ежедневно</SelectItem>
+									<SelectItem key='weekly'>Еженедельно</SelectItem>
+									<SelectItem key='monthly'>Ежемесячно</SelectItem>
+									<SelectItem key='one_time'>Разово</SelectItem>
+								</Select>
+							</div>
+							<input
+								type='hidden'
+								name='icon'
+								value={icon}
+							/>
+
+							{periodFields === 'weekly' && (
+								<Select
+									name='day_of_week'
+									label='День недели'
+									selectedKeys={[(expense.day_of_week ?? '').toString()]}
+								>
+									<SelectItem key='1'>Понедельник</SelectItem>
+									<SelectItem key='2'>Вторник</SelectItem>
+									<SelectItem key='3'>Среда</SelectItem>
+									<SelectItem key='4'>Четверг</SelectItem>
+									<SelectItem key='5'>Пятница</SelectItem>
+									<SelectItem key='6'>Суббота</SelectItem>
+									<SelectItem key='0'>Воскресенье</SelectItem>
+								</Select>
+							)}
+							{periodFields === 'monthly' && (
+								<Input
+									name='day_of_month'
+									type='number'
+									min={1}
+									max={31}
+									label='День месяца'
+									defaultValue={
+										expense.day_of_month ? String(expense.day_of_month) : ''
+									}
+								/>
+							)}
+							{periodFields === 'one_time' && (
+								<>
+									<DatePicker
+										label='Дата'
+										value={singleDate ?? undefined}
+										onChange={setSingleDate}
 									/>
-									<Input
-										name='amount'
-										type='number'
-										step='0.01'
-										label='Сумма'
-										defaultValue={String(expense.amount)}
-										isRequired
-										isInvalid={Boolean((errors as any)?.amount)}
-										errorMessage={(errors as any)?.amount}
-									/>
-									<Input
-										name='expected_leftover'
-										type='number'
-										step='0.01'
-										label='Ожидаемый остаток (опционально)'
-										defaultValue={
-											expense.expected_leftover != null
-												? String(expense.expected_leftover)
-												: ''
-										}
-										isInvalid={Boolean((errors as any)?.expected_leftover)}
-										errorMessage={(errors as any)?.expected_leftover}
-									/>
-									<Textarea
-										name='description'
-										label='Описание'
-										defaultValue={expense.description || ''}
-										isInvalid={Boolean((errors as any)?.description)}
-										errorMessage={(errors as any)?.description}
-									/>
-									<div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-										<Select
-											label='Иконка'
-											selectedKeys={icon ? [icon] : []}
-											onChange={e => setIcon(e.target.value)}
-										>
-											{iconOptions.map(key => (
-												<SelectItem key={key}>{key}</SelectItem>
-											))}
-										</Select>
-										<Select
-											label='Периодичность'
-											selectedKeys={[periodType]}
-											onChange={e => setPeriodType(e.target.value as any)}
-										>
-											<SelectItem key='daily'>Ежедневно</SelectItem>
-											<SelectItem key='weekly'>Еженедельно</SelectItem>
-											<SelectItem key='monthly'>Ежемесячно</SelectItem>
-											<SelectItem key='one_time'>Разово</SelectItem>
-										</Select>
-									</div>
 									<input
 										type='hidden'
-										name='icon'
-										value={icon}
+										name='single_date'
+										value={singleDate ? singleDate.toString() : ''}
 									/>
-
-									{periodFields === 'weekly' && (
-										<Select
-											name='day_of_week'
-											label='День недели'
-											selectedKeys={[(expense.day_of_week ?? '').toString()]}
-										>
-											<SelectItem key='1'>Понедельник</SelectItem>
-											<SelectItem key='2'>Вторник</SelectItem>
-											<SelectItem key='3'>Среда</SelectItem>
-											<SelectItem key='4'>Четверг</SelectItem>
-											<SelectItem key='5'>Пятница</SelectItem>
-											<SelectItem key='6'>Суббота</SelectItem>
-											<SelectItem key='0'>Воскресенье</SelectItem>
-										</Select>
-									)}
-									{periodFields === 'monthly' && (
-										<Input
-											name='day_of_month'
-											type='number'
-											min={1}
-											max={31}
-											label='День месяца'
-											defaultValue={
-												expense.day_of_month ? String(expense.day_of_month) : ''
-											}
-										/>
-									)}
-									{periodFields === 'one_time' && (
-										<>
-											<DatePicker
-												label='Дата'
-												value={singleDate ?? undefined}
-												onChange={setSingleDate}
-											/>
-											<input
-												type='hidden'
-												name='single_date'
-												value={singleDate ? singleDate.toString() : ''}
-											/>
-										</>
-									)}
-									{periodFields === 'daily' && (
-										<Input
-											name='time_of_day'
-											type='time'
-											label='Время'
-											defaultValue={expense.time_of_day || ''}
-										/>
-									)}
-									{periodFields !== 'one_time' && (
-										<>
-											<DatePicker
-												label='Дата окончания'
-												value={endDate ?? undefined}
-												onChange={setEndDate}
-											/>
-											<input
-												type='hidden'
-												name='end_date'
-												value={endDate ? endDate.toString() : ''}
-											/>
-										</>
-									)}
-								</ModalBody>
-								<ModalFooter>
-									<Button
-										variant='flat'
-										onPress={close}
-										disabled={processing}
-									>
-										Отмена
-									</Button>
-									<div className='flex-1' />
-									<Button
-										color='danger'
-										variant='bordered'
-										onPress={() => {
-											if (processing) {
-												return
-											}
-											setConfirmOpen(true)
-										}}
-										disabled={processing}
-									>
-										Удалить
-									</Button>
-									<Button
-										color='primary'
-										type='submit'
-										isLoading={processing}
-									>
-										Сохранить
-									</Button>
-								</ModalFooter>
-							</>
-						)}
-					</Form>
+								</>
+							)}
+							{periodFields === 'daily' && (
+								<Input
+									name='time_of_day'
+									type='time'
+									label='Время'
+									defaultValue={expense.time_of_day || ''}
+								/>
+							)}
+							{periodFields !== 'one_time' && (
+								<>
+									<DatePicker
+										label='Дата окончания'
+										value={endDate ?? undefined}
+										onChange={setEndDate}
+									/>
+									<input
+										type='hidden'
+										name='end_date'
+										value={endDate ? endDate.toString() : ''}
+									/>
+								</>
+							)}
+						</ModalBody>
+						<ModalFooter>
+							<Button
+								variant='flat'
+								onPress={close}
+								disabled={processing}
+							>
+								Отмена
+							</Button>
+							<div className='flex-1' />
+							<Button
+								color='danger'
+								variant='bordered'
+								onPress={() => {
+									if (processing) {
+										return
+									}
+									setConfirmOpen(true)
+								}}
+								disabled={processing}
+							>
+								Удалить
+							</Button>
+							<Button
+								color='primary'
+								type='submit'
+								isLoading={processing}
+							>
+								Сохранить
+							</Button>
+						</ModalFooter>
+					</form>
 				)}
 			</ModalContent>
 			<ConfirmDeleteModal
