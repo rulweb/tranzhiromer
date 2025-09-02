@@ -106,4 +106,15 @@ class SchedulesController extends Controller
 
         return redirect()->back()->with('success', 'Оплата отмечена');
     }
+
+    public function unpay(Schedule $schedule): \Illuminate\Http\RedirectResponse
+    {
+        Gate::authorize('update', $schedule);
+
+        $schedule->is_paid = false;
+        // Do not reset expected_leftover automatically; keep last known value for reference
+        $schedule->save();
+
+        return redirect()->back()->with('success', 'Оплата отменена');
+    }
 }

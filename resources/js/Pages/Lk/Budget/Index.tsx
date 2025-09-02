@@ -4,6 +4,7 @@ import { Head, router } from '@inertiajs/react'
 import dayjs from 'dayjs'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
+import ConfirmDeleteModal from '../../../Components/ConfirmDeleteModal'
 import ConfirmPayModal from '../../../Components/ConfirmPayModal'
 import ExpenseCreateModal from '../../../Components/ExpenseCreateModal'
 import ExpenseEditModal from '../../../Components/ExpenseEditModal'
@@ -37,6 +38,8 @@ export default function BudgetIndex({
 	const [payOpen, setPayOpen] = useState<boolean>(false)
 	const [payingExpense, setPayingExpense] = useState<Schedule | null>(null)
 	const [payLeftover, setPayLeftover] = useState<string>('0')
+	const [unpayOpen, setUnpayOpen] = useState<boolean>(false)
+	const [unpayingExpense, setUnpayingExpense] = useState<Schedule | null>(null)
 
 	// Keep schedules in sync with server props when they change
 	useEffect(() => {
@@ -101,10 +104,10 @@ export default function BudgetIndex({
 						&lt;
 					</Button>
 					<div>
- 					<input
- 						type='month'
- 						className='w-[140px] sm:w-auto rounded-medium border border-default-200 bg-content1 text-foreground px-2 py-1 text-sm'
- 						value={month}
+						<input
+							type='month'
+							className='w-[140px] sm:w-auto rounded-medium border border-default-200 bg-content1 text-foreground px-2 py-1 text-sm'
+							value={month}
 							onChange={e => {
 								const val = e.target.value
 								if (dayjs(val + '-01').isValid()) {
@@ -182,6 +185,10 @@ export default function BudgetIndex({
 										)
 										setPayOpen(true)
 									}}
+									onUnpaid={s => {
+										setUnpayingExpense(s)
+										setUnpayOpen(true)
+									}}
 								/>
 							))}
 						</div>
@@ -213,6 +220,10 @@ export default function BudgetIndex({
 								s.expected_leftover != null ? String(s.expected_leftover) : '0'
 							)
 							setPayOpen(true)
+						}}
+						onUnpayExpense={s => {
+							setUnpayingExpense(s)
+							setUnpayOpen(true)
 						}}
 					/>
 				))}
@@ -279,6 +290,29 @@ export default function BudgetIndex({
 					/>
 				</div>
 			</ConfirmPayModal>
+
+			<ConfirmDeleteModal
+				isOpen={unpayOpen}
+				onOpenChange={setUnpayOpen}
+				title='Отменить оплату?'
+				description='Отменить отметку об оплате для этого расхода?'
+				confirmText='Отменить оплату'
+				onConfirm={async () => {
+					if (!unpayingExpense) return
+					await router.post(
+						`/lk/schedules/${unpayingExpense.id}/unpay`,
+						{},
+						{
+							preserveScroll: true,
+							onSuccess: () => {
+								setUnpayingExpense(null)
+								setUnpayOpen(false)
+								router.reload({ only: ['schedules'] })
+							}
+						}
+					)
+				}}
+			/>
 		</LkLayout>
 	)
 }

@@ -18,6 +18,7 @@ export type ScheduleRowProps = {
 	onEdit?: (s: Schedule) => void
 	onMove?: (s: Schedule) => void
 	onPaid?: (s: Schedule) => void
+	onUnpaid?: (s: Schedule) => void
 	isExpense?: boolean
 }
 
@@ -46,6 +47,7 @@ export default function ScheduleRow({
 	onEdit,
 	onMove,
 	onPaid,
+	onUnpaid,
 	isExpense
 }: ScheduleRowProps) {
 	const end = schedule.end_date ? dayjs(schedule.end_date) : null
@@ -139,15 +141,6 @@ export default function ScheduleRow({
 						)}
 					</div>
 					<div className='flex flex-col items-center gap-2'>
-						{isExpense && !schedule.is_paid && (
-							<Button
-								size='sm'
-								variant='flat'
-								onPress={() => onPaid?.(schedule)}
-							>
-								Оплатить
-							</Button>
-						)}
 						<div className='flex items-center gap-2'>
 							{onMove && (
 								<Button
@@ -172,6 +165,25 @@ export default function ScheduleRow({
 								</Button>
 							)}
 						</div>
+						{isExpense && !schedule.is_paid && (
+							<Button
+								size='sm'
+								variant='flat'
+								onPress={() => onPaid?.(schedule)}
+							>
+								Оплатить
+							</Button>
+						)}
+						{isExpense && schedule.is_paid && (
+							<Button
+								size='sm'
+								variant='flat'
+								color='warning'
+								onPress={() => onUnpaid?.(schedule)}
+							>
+								Отменить оплату
+							</Button>
+						)}
 					</div>
 				</div>
 			</CardBody>

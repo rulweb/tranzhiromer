@@ -75,6 +75,7 @@ export type IncomeGroupProps = {
 	onEditExpense?: (s: Schedule) => void
 	onMoveExpense?: (s: Schedule) => void
 	onPayExpense?: (s: Schedule) => void
+	onUnpayExpense?: (s: Schedule) => void
 }
 
 function formatPeriodicity(s: Schedule): string {
@@ -103,7 +104,8 @@ export default function IncomeGroup({
 	onEditIncome,
 	onEditExpense,
 	onMoveExpense,
-	onPayExpense
+	onPayExpense,
+	onUnpayExpense
 }: IncomeGroupProps) {
 	const [open, setOpen] = useState(true)
 	const sums = useMemo(() => {
@@ -253,6 +255,7 @@ export default function IncomeGroup({
 												onMove={onMoveExpense}
 												onEdit={onEditExpense}
 												onPaid={onPayExpense}
+												onUnpaid={onUnpayExpense}
 											/>
 										))}
 									</div>

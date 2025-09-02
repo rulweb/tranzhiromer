@@ -18,8 +18,9 @@ import {
 	User
 } from '@heroui/react'
 import { Link, router, usePage } from '@inertiajs/react'
-import { ChevronDown, LogOut, Pencil, Home, Wallet } from 'lucide-react'
+import { ChevronDown, Home, LogOut, Pencil, Wallet } from 'lucide-react'
 import { PropsWithChildren, useMemo, useState } from 'react'
+
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal'
 
 function InviteForm({ groupId }: { groupId: number }) {
@@ -71,6 +72,12 @@ export default function LkLayout({ children }: PropsWithChildren) {
 	const [newGroupName, setNewGroupName] = useState('')
 	const [editName, setEditName] = useState(currentGroup?.name ?? '')
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+	const [deleteMemberModalOpen, setDeleteMemberModalOpen] = useState(false)
+	const [memberToDelete, setMemberToDelete] = useState<{
+		id: number
+		name: string
+		email: string
+	} | null>(null)
 
 	const handleLogout = () => {
 		router.post('/lk/logout')
@@ -289,12 +296,10 @@ export default function LkLayout({ children }: PropsWithChildren) {
 													size='sm'
 													variant='light'
 													color='danger'
-													onPress={() =>
-														router.delete(
-															`/lk/groups/${currentGroup?.id}/members/${m.id}`,
-															{ preserveScroll: true }
-														)
-													}
+													onPress={() => {
+														setMemberToDelete(m)
+														setDeleteMemberModalOpen(true)
+													}}
 												>
 													Удалить
 												</Button>
@@ -316,14 +321,14 @@ export default function LkLayout({ children }: PropsWithChildren) {
 								>
 									Отмена
 								</Button>
- 							{/* Delete group with confirmation modal */}
- 							<Button
- 								color='danger'
- 								variant='flat'
- 								onPress={() => setDeleteModalOpen(true)}
- 							>
- 								Удалить группу
- 							</Button>
+								{/* Delete group with confirmation modal */}
+								<Button
+									color='danger'
+									variant='flat'
+									onPress={() => setDeleteModalOpen(true)}
+								>
+									Удалить группу
+								</Button>
 								<Button
 									color='primary'
 									onPress={saveEdit}
@@ -354,7 +359,34 @@ export default function LkLayout({ children }: PropsWithChildren) {
 				}}
 			/>
 
-			<div className='mx-auto max-w-4xl px-4 sm:px-6 pt-6 pb-24 sm:pb-6'>{children}</div>
+			<ConfirmDeleteModal
+				isOpen={deleteMemberModalOpen}
+				onOpenChange={setDeleteMemberModalOpen}
+				title='Удалить участника?'
+				description={
+					memberToDelete
+						? `Удалить ${memberToDelete.name} (${memberToDelete.email}) из группы?`
+						: 'Удалить участника из группы?'
+				}
+				confirmText='Удалить'
+				onConfirm={async () => {
+					if (!currentGroup || !memberToDelete) return
+					await router.delete(
+						`/lk/groups/${currentGroup.id}/members/${memberToDelete.id}`,
+						{
+							preserveScroll: true,
+							onSuccess: () => {
+								setDeleteMemberModalOpen(false)
+								setMemberToDelete(null)
+							}
+						}
+					)
+				}}
+			/>
+
+			<div className='mx-auto max-w-4xl px-4 sm:px-6 pt-6 pb-24 sm:pb-6'>
+				{children}
+			</div>
 
 			{/* Mobile bottom navigation */}
 			<nav className='sm:hidden fixed bottom-0 inset-x-0 z-40 border-t border-default-200 bg-white/95 backdrop-blur'>
@@ -363,7 +395,12 @@ export default function LkLayout({ children }: PropsWithChildren) {
 						<li>
 							<Link
 								href='/lk'
-								className={'flex flex-col items-center justify-center gap-1 text-xs h-full ' + (isActive({ href: '/lk' }) ? 'text-primary-600' : 'text-foreground-500')}
+								className={
+									'flex flex-col items-center justify-center gap-1 text-xs h-full ' +
+									(isActive({ href: '/lk' })
+										? 'text-primary-600'
+										: 'text-foreground-500')
+								}
 								aria-current={isActive({ href: '/lk' }) ? 'page' : undefined}
 							>
 								<Home size={18} />
@@ -373,8 +410,15 @@ export default function LkLayout({ children }: PropsWithChildren) {
 						<li>
 							<Link
 								href='/lk/budget'
-								className={'flex flex-col items-center justify-center gap-1 text-xs h-full ' + (isActive({ href: '/lk/budget' }) ? 'text-primary-600' : 'text-foreground-500')}
-								aria-current={isActive({ href: '/lk/budget' }) ? 'page' : undefined}
+								className={
+									'flex flex-col items-center justify-center gap-1 text-xs h-full ' +
+									(isActive({ href: '/lk/budget' })
+										? 'text-primary-600'
+										: 'text-foreground-500')
+								}
+								aria-current={
+									isActive({ href: '/lk/budget' }) ? 'page' : undefined
+								}
 							>
 								<Wallet size={18} />
 								<span>Бюджет</span>
