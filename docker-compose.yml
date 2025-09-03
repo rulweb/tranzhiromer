@@ -3,6 +3,7 @@ services:
     build:
       context: ./docker/nginx
       dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
       - '8000:80'
     volumes:
@@ -20,6 +21,7 @@ services:
     build:
       context: ./docker/web
       dockerfile: Dockerfile
+    restart: unless-stopped
     volumes:
       - './:/app'
     depends_on:
@@ -31,6 +33,7 @@ services:
 
   db:
     image: postgres:17
+    restart: unless-stopped
     ports:
       - '${EXTERNAL_PGSQL_PORT:-5432}:5432'
     volumes:
