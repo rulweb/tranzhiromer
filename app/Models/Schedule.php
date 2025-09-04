@@ -79,7 +79,9 @@ class Schedule extends Model
         'single_date',
         'amount',
         'expected_leftover',
+        'leftover',
         'is_paid',
+        'is_cash_leftover',
         'end_date',
     ];
 
@@ -89,6 +91,7 @@ class Schedule extends Model
         'end_date' => 'date',
         'single_date' => 'date',
         'is_paid' => 'boolean',
+        'is_credit' => 'boolean',
     ];
 
     public function group(): BelongsTo

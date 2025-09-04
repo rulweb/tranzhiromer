@@ -256,6 +256,7 @@ export default function BudgetIndex({
 				isOpen={editExpenseOpen}
 				onOpenChange={setEditExpenseOpen}
 				expense={editingExpense}
+				incomes={incomes}
 			/>
 
 			<ConfirmPayModal

@@ -101,7 +101,7 @@ class SchedulesController extends Controller
 
         $data = $request->validated();
         $schedule->is_paid = true;
-        $schedule->expected_leftover = $data['leftover'];
+        $schedule->leftover = $data['leftover'];
         $schedule->save();
 
         return redirect()->back()->with('success', 'Оплата отмечена');
@@ -112,6 +112,7 @@ class SchedulesController extends Controller
         Gate::authorize('update', $schedule);
 
         $schedule->is_paid = false;
+        $schedule->leftover = 0;
         // Do not reset expected_leftover automatically; keep last known value for reference
         $schedule->save();
 

@@ -1,5 +1,6 @@
 import {
 	Button,
+	Checkbox,
 	DatePicker,
 	Input,
 	Modal,
@@ -12,7 +13,7 @@ import {
 	Textarea
 } from '@heroui/react'
 import { router, usePage } from '@inertiajs/react'
-import { type DateValue, parseDate } from '@internationalized/date'
+import { type DateValue } from '@internationalized/date'
 import { useMemo, useState } from 'react'
 
 import { Schedule } from '../types'
@@ -41,31 +42,48 @@ export default function ExpenseCreateModal({
 	groupId,
 	incomes
 }: ExpenseCreateModalProps) {
-	const [icon, setIcon] = useState<string>('')
-	const [periodType, setPeriodType] = useState<
-		'daily' | 'weekly' | 'monthly' | 'one_time'
-	>('monthly')
-	const [parentId, setParentId] = useState<string>('')
-	const [singleDate, setSingleDate] = useState<DateValue | null>(null)
-	const [endDate, setEndDate] = useState<DateValue | null>(null)
-	const [processing, setProcessing] = useState(false)
 	const { errors } = usePage().props as any
+	const [processing, setProcessing] = useState(false)
+	const [confirmOpen, setConfirmOpen] = useState(false)
 
-	console.log('errors', errors)
-	console.log('day_of_month', Boolean(errors?.day_of_month))
+	const [formData, setFormData] = useState({
+		name: '',
+		amount: '',
+		expected_leftover: '',
+		description: '',
+		parentId: null,
+		icon: '',
+		period_type: 'monthly' as 'daily' | 'weekly' | 'monthly' | 'one_time',
+		day_of_week: '',
+		day_of_month: '',
+		time_of_day: '',
+		single_date: null as DateValue | null,
+		end_date: null as DateValue | null,
+		is_cash_leftover: false
+	})
 
+	// Определяем тип периода для условного рендеринга
 	const periodFields = useMemo(() => {
-		if (periodType === 'weekly') {
-			return 'weekly'
-		}
-		if (periodType === 'monthly') {
-			return 'monthly'
-		}
-		if (periodType === 'one_time') {
-			return 'one_time'
-		}
-		return 'daily'
-	}, [periodType])
+		return formData.period_type
+	}, [formData.period_type])
+
+	// Обновление обычных полей формы
+	const handleChange = (field: keyof typeof formData, value: any) => {
+		setFormData(prev => ({ ...prev, [field]: value }))
+	}
+
+	// Обновление полей ввода
+	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const { name, value, type, checked } = e.target
+		handleChange(
+			name as keyof typeof formData,
+			type === 'checkbox' ? checked : value
+		)
+	}
+
+	const handleSelectChange = (field: string, key: string | number) => {
+		handleChange(field as keyof typeof formData, String(key))
+	}
 
 	return (
 		<Modal
@@ -81,15 +99,8 @@ export default function ExpenseCreateModal({
 						onSubmit={e => {
 							e.preventDefault()
 							setProcessing(true)
-							const form = e.currentTarget as HTMLFormElement
-							const fd = new FormData(form)
-							fd.set('type', 'expense')
-							fd.set('group_id', String(groupId))
-							fd.set('period_type', periodType)
-							if (parentId) {
-								fd.set('parent_id', parentId)
-							}
-							router.post('/lk/schedules', fd, {
+
+							router.post('/lk/schedules', formData as any, {
 								onSuccess: () => {
 									close()
 									router.reload({ only: ['schedules'] })
@@ -104,6 +115,8 @@ export default function ExpenseCreateModal({
 							<Input
 								name='name'
 								label='Название'
+								value={formData.name}
+								onChange={handleInputChange}
 								isRequired
 								isInvalid={Boolean(errors?.name)}
 								errorMessage={errors?.name as any}
@@ -113,23 +126,38 @@ export default function ExpenseCreateModal({
 								type='number'
 								step='0.01'
 								label='Сумма'
+								value={formData.amount}
+								onChange={handleInputChange}
 								isRequired
 								isInvalid={Boolean(errors?.amount)}
 								errorMessage={errors?.amount as any}
 							/>
-
 							<Input
 								name='expected_leftover'
 								type='number'
 								step='0.01'
 								label='Ожидаемый остаток (опционально)'
+								value={formData.expected_leftover}
+								onChange={handleInputChange}
 								isInvalid={Boolean(errors?.expected_leftover)}
 								errorMessage={errors?.expected_leftover as any}
 							/>
 
+							<Checkbox
+								name='is_cash_leftover'
+								radius='sm'
+								color='primary'
+								isSelected={formData.is_cash_leftover}
+								onValueChange={value => handleChange('is_cash_leftover', value)}
+							>
+								Остаток наличными средствами
+							</Checkbox>
+
 							<Textarea
 								name='description'
 								label='Описание'
+								value={formData.description}
+								onChange={handleInputChange}
 								isInvalid={Boolean(errors?.description)}
 								errorMessage={errors?.description as any}
 							/>
@@ -137,8 +165,8 @@ export default function ExpenseCreateModal({
 							<Select
 								label='Привязать к доходу'
 								isClearable
-								selectedKeys={[parentId]}
-								onChange={e => setParentId(e.target.value)}
+								selectedKeys={formData.parentId ? [formData.parentId] : []}
+								onChange={e => handleSelectChange('parentId', e.target.value)}
 								isInvalid={Boolean(errors?.parent_id)}
 								errorMessage={errors?.parent_id as any}
 							>
@@ -150,23 +178,21 @@ export default function ExpenseCreateModal({
 							<div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
 								<Select
 									label='Иконка'
-									isRequired
-									selectedKeys={icon ? [icon] : []}
-									onChange={e => setIcon(e.target.value)}
-									isInvalid={Boolean(errors?.icon)}
-									errorMessage={errors?.icon as any}
+									selectedKeys={formData.icon ? [formData.icon] : []}
+									onChange={e => handleSelectChange('icon', e.target.value)}
 								>
 									{iconOptions.map(key => (
 										<SelectItem key={key}>{key}</SelectItem>
 									))}
 								</Select>
+
 								<Select
 									label='Периодичность'
 									isRequired
-									selectedKeys={[periodType]}
-									onChange={e => setPeriodType(e.target.value as any)}
-									isInvalid={Boolean(errors?.period_type)}
-									errorMessage={errors?.period_type as any}
+									selectedKeys={[formData.period_type]}
+									onChange={e =>
+										handleSelectChange('period_type', e.target.value)
+									}
 								>
 									<SelectItem key='daily'>Ежедневно</SelectItem>
 									<SelectItem key='weekly'>Еженедельно</SelectItem>
@@ -174,19 +200,16 @@ export default function ExpenseCreateModal({
 									<SelectItem key='one_time'>Разово</SelectItem>
 								</Select>
 							</div>
-							<input
-								type='hidden'
-								name='icon'
-								value={icon}
-							/>
 
 							{periodFields === 'weekly' && (
 								<Select
 									name='day_of_week'
-									isRequired
 									label='День недели'
-									isInvalid={Boolean(errors?.day_of_week)}
-									errorMessage={errors?.day_of_week as any}
+									isRequired
+									selectedKeys={[formData.day_of_week]}
+									onChange={e =>
+										handleSelectChange('day_of_week', e.target.value)
+									}
 								>
 									<SelectItem key='1'>Понедельник</SelectItem>
 									<SelectItem key='2'>Вторник</SelectItem>
@@ -197,59 +220,48 @@ export default function ExpenseCreateModal({
 									<SelectItem key='0'>Воскресенье</SelectItem>
 								</Select>
 							)}
+
 							{periodFields === 'monthly' && (
 								<Input
 									name='day_of_month'
 									type='number'
+									isRequired
 									min={1}
 									max={31}
 									label='День месяца'
-									isRequired
-									isInvalid={Boolean(errors?.day_of_month)}
-									errorMessage={errors?.day_of_month as any}
+									value={formData.day_of_month}
+									onChange={handleInputChange}
 								/>
 							)}
+
 							{periodFields === 'one_time' && (
 								<>
 									<DatePicker
 										label='Дата'
 										isRequired
-										value={singleDate ?? undefined}
-										onChange={setSingleDate}
-										isInvalid={Boolean(errors?.single_date)}
-										errorMessage={errors?.single_date as any}
-									/>
-									<input
-										type='hidden'
-										name='single_date'
-										value={singleDate ? singleDate.toString() : ''}
+										value={formData.single_date ?? undefined}
+										onChange={value => handleChange('single_date', value)}
 									/>
 								</>
 							)}
+
 							{periodFields === 'daily' && (
 								<Input
 									name='time_of_day'
-									isRequired
 									type='time'
+									isRequired
 									label='Время'
-									isInvalid={Boolean(errors?.time_of_day)}
-									errorMessage={errors?.time_of_day as any}
+									value={formData.time_of_day}
+									onChange={handleInputChange}
 								/>
 							)}
+
 							{periodFields !== 'one_time' && (
 								<>
 									<DatePicker
 										label='Дата окончания'
-										isRequired
-										value={endDate ?? undefined}
-										onChange={setEndDate}
-										isInvalid={Boolean(errors?.end_date)}
-										errorMessage={errors?.end_date as any}
-									/>
-									<input
-										type='hidden'
-										name='end_date'
-										value={endDate ? endDate.toString() : ''}
+										value={formData.end_date ?? undefined}
+										onChange={value => handleChange('end_date', value)}
 									/>
 								</>
 							)}

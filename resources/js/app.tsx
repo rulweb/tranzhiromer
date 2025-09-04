@@ -1,5 +1,6 @@
 import { HeroUIProvider } from '@heroui/react'
 import { createInertiaApp } from '@inertiajs/react'
+import { I18nProvider } from '@react-aria/i18n'
 import dayjs from 'dayjs'
 import ru from 'dayjs/locale/ru'
 import duration from 'dayjs/plugin/duration'
@@ -21,8 +22,10 @@ createInertiaApp({
 	setup({ el, App, props }) {
 		createRoot(el as HTMLElement).render(
 			<HeroUIProvider>
-				<Toaster />
-				<App {...props} />
+				<I18nProvider locale='ru'>
+					<Toaster />
+					<App {...props} />
+				</I18nProvider>
 			</HeroUIProvider>
 		)
 	},

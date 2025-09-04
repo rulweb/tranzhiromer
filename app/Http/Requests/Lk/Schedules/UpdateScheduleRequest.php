@@ -30,6 +30,7 @@ class UpdateScheduleRequest extends FormRequest
             'single_date' => ['sometimes', 'nullable', 'date', Rule::requiredIf(fn () => $this->input('period_type') === SchedulePeriodType::ONE_TIME->value)],
             'amount' => ['sometimes', 'numeric'],
             'expected_leftover' => ['sometimes', 'nullable', 'numeric'],
+            'is_cash_leftover' => ['sometimes', 'nullable', 'boolean'],
             'end_date' => ['sometimes', 'nullable', 'date'],
         ];
     }
