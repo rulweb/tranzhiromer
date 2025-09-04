@@ -16,10 +16,9 @@ import { router, usePage } from '@inertiajs/react'
 import {
 	type DateValue,
 	getLocalTimeZone,
-	parseDate,
 	today
 } from '@internationalized/date'
-import { AArrowUpIcon, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { Schedule } from '../types'
@@ -38,22 +37,26 @@ const iconOptions = [
 	'investment'
 ]
 
-export type ExpenseEditModalProps = {
+export type ExpenseModalProps = {
 	isOpen: boolean
 	onOpenChange: (v: boolean) => void
-	expense: Schedule | null
+	expense?: Schedule | null // Для редактирования
+	groupId?: number // Для создания
 	incomes: Schedule[]
 }
 
-export default function ExpenseEditModal({
+export default function ExpenseModal({
 	isOpen,
 	onOpenChange,
 	expense,
+	groupId,
 	incomes
-}: ExpenseEditModalProps) {
+}: ExpenseModalProps) {
 	const { errors } = usePage().props as any
 	const [processing, setProcessing] = useState(false)
 	const [confirmOpen, setConfirmOpen] = useState(false)
+
+	const isEditMode = Boolean(expense)
 
 	const [formData, setFormData] = useState({
 		name: '',
@@ -71,8 +74,9 @@ export default function ExpenseEditModal({
 		is_cash_leftover: false
 	})
 
+	// Инициализация формы при редактировании
 	useEffect(() => {
-		if (expense) {
+		if (expense && isEditMode) {
 			setFormData({
 				name: expense.name || '',
 				amount: String(expense.amount || ''),
@@ -91,8 +95,25 @@ export default function ExpenseEditModal({
 				end_date: normalizeToCalendarDate(expense.end_date),
 				is_cash_leftover: Boolean(expense.is_cash_leftover)
 			})
+		} else if (!isEditMode) {
+			// Сброс формы для создания
+			setFormData({
+				name: '',
+				amount: '',
+				expected_leftover: '',
+				description: '',
+				parent_id: '',
+				icon: '',
+				period_type: 'monthly',
+				day_of_week: '',
+				day_of_month: '',
+				time_of_day: '',
+				single_date: null,
+				end_date: null,
+				is_cash_leftover: false
+			})
 		}
-	}, [expense])
+	}, [expense, isEditMode])
 
 	// Определяем тип периода для условного рендеринга
 	const periodFields = useMemo(() => {
@@ -117,7 +138,52 @@ export default function ExpenseEditModal({
 		handleChange(field as keyof typeof formData, String(key))
 	}
 
-	if (!expense) {
+	const handleSubmit = (e: React.FormEvent) => {
+		e.preventDefault()
+		setProcessing(true)
+
+		const submitData = {
+			...formData,
+			single_date: formData.single_date?.toString() || null,
+			end_date: formData.end_date?.toString() || null
+		}
+
+		if (isEditMode && expense) {
+			// Редактирование
+			router.patch(`/lk/schedules/${expense.id}`, submitData, {
+				onSuccess: () => {
+					onOpenChange(false)
+					router.reload({ only: ['schedules'] })
+				},
+				onFinish: () => setProcessing(false),
+				preserveScroll: true
+			})
+		} else {
+			// Создание
+			router.post('/lk/schedules', { ...submitData, type: 'expense' } as any, {
+				onSuccess: () => {
+					onOpenChange(false)
+					router.reload({ only: ['schedules'] })
+				},
+				onFinish: () => setProcessing(false),
+				preserveScroll: true
+			})
+		}
+	}
+
+	const handleDelete = async () => {
+		if (!expense) return
+
+		await router.delete(`/lk/schedules/${expense.id}`, {
+			preserveScroll: true,
+			onSuccess: () => {
+				onOpenChange(false)
+				router.reload({ only: ['schedules'] })
+			}
+		})
+	}
+
+	if (isEditMode && !expense) {
 		return null
 	}
 
@@ -129,28 +195,10 @@ export default function ExpenseEditModal({
 		>
 			<ModalContent>
 				{close => (
-					<form
-						onSubmit={e => {
-							e.preventDefault()
-							setProcessing(true)
-
-							const fd = {
-								...formData,
-								single_date: formData.single_date?.toString(),
-								end_date: formData.end_date?.toString()
-							}
-
-							router.patch(`/lk/schedules/${expense.id}`, fd, {
-								onSuccess: () => {
-									close()
-									router.reload({ only: ['schedules'] })
-								},
-								onFinish: () => setProcessing(false),
-								preserveScroll: true
-							})
-						}}
-					>
-						<ModalHeader>Редактировать расход</ModalHeader>
+					<form onSubmit={handleSubmit}>
+						<ModalHeader>
+							{isEditMode ? 'Редактировать расход' : 'Добавить расход'}
+						</ModalHeader>
 						<ModalBody className='flex flex-col gap-3'>
 							<Input
 								name='name'
@@ -206,7 +254,7 @@ export default function ExpenseEditModal({
 								label='Привязать к доходу'
 								isClearable
 								selectedKeys={formData.parent_id ? [formData.parent_id] : []}
-								onChange={e => handleSelectChange('parentId', e.target.value)}
+								onChange={e => handleSelectChange('parent_id', e.target.value)}
 								isInvalid={Boolean(errors?.parent_id)}
 								errorMessage={errors?.parent_id as any}
 							>
@@ -230,6 +278,7 @@ export default function ExpenseEditModal({
 
 								<Select
 									label='Периодичность'
+									isRequired
 									selectedKeys={[formData.period_type]}
 									onChange={e =>
 										handleSelectChange('period_type', e.target.value)
@@ -248,6 +297,7 @@ export default function ExpenseEditModal({
 								<Select
 									name='day_of_week'
 									label='День недели'
+									isRequired={!isEditMode}
 									selectedKeys={[formData.day_of_week]}
 									onChange={e =>
 										handleSelectChange('day_of_week', e.target.value)
@@ -269,6 +319,7 @@ export default function ExpenseEditModal({
 								<Input
 									name='day_of_month'
 									type='number'
+									isRequired={!isEditMode}
 									min={1}
 									max={31}
 									label='День месяца'
@@ -283,6 +334,7 @@ export default function ExpenseEditModal({
 								<>
 									<DatePicker
 										label='Дата'
+										isRequired={!isEditMode}
 										value={formData.single_date ?? undefined}
 										onChange={value => handleChange('single_date', value)}
 										isInvalid={Boolean(errors?.single_date)}
@@ -296,6 +348,7 @@ export default function ExpenseEditModal({
 								<Input
 									name='time_of_day'
 									type='time'
+									isRequired={!isEditMode}
 									label='Время'
 									value={formData.time_of_day}
 									onChange={handleInputChange}
@@ -341,46 +394,44 @@ export default function ExpenseEditModal({
 							>
 								Отмена
 							</Button>
-							<div className='flex-1' />
-							<Button
-								color='danger'
-								variant='bordered'
-								onPress={() => {
-									if (processing) return
-									setConfirmOpen(true)
-								}}
-								disabled={processing}
-							>
-								Удалить
-							</Button>
+							{isEditMode && (
+								<>
+									<div className='flex-1' />
+									<Button
+										color='danger'
+										variant='bordered'
+										onPress={() => {
+											if (processing) return
+											setConfirmOpen(true)
+										}}
+										disabled={processing}
+									>
+										Удалить
+									</Button>
+								</>
+							)}
 							<Button
 								color='primary'
 								type='submit'
 								isLoading={processing}
 							>
-								Сохранить
+								{isEditMode ? 'Сохранить' : 'Создать'}
 							</Button>
 						</ModalFooter>
 					</form>
 				)}
 			</ModalContent>
 
-			<ConfirmDeleteModal
-				isOpen={confirmOpen}
-				onOpenChange={setConfirmOpen}
-				title='Удалить расход?'
-				description='Удалить этот расход?'
-				confirmText='Удалить'
-				onConfirm={async () => {
-					await router.delete(`/lk/schedules/${expense.id}`, {
-						preserveScroll: true,
-						onSuccess: () => {
-							onOpenChange(false)
-							router.reload({ only: ['schedules'] })
-						}
-					})
-				}}
-			/>
+			{isEditMode && (
+				<ConfirmDeleteModal
+					isOpen={confirmOpen}
+					onOpenChange={setConfirmOpen}
+					title='Удалить расход?'
+					description='Удалить этот расход?'
+					confirmText='Удалить'
+					onConfirm={handleDelete}
+				/>
+			)}
 		</Modal>
 	)
 }

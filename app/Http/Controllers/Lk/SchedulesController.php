@@ -21,7 +21,6 @@ class SchedulesController extends Controller
     {
         $validated = $request->validated();
 
-        // Determine group: use provided or first user group
         $user = $request->user();
 
         $group = Group::findOrFail((int) $user->current_group_id);
@@ -53,7 +52,9 @@ class SchedulesController extends Controller
     {
         $validated = $request->validated();
 
-        $group = Group::findOrFail($validated['group_id']);
+        $user = $request->user();
+
+        $group = Group::findOrFail((int) $user->current_group_id);
         Gate::authorize('view', $group);
 
         // Normalize one-time: end_date equals single_date

@@ -1,13 +1,11 @@
-import { Button } from '@heroui/react'
-import { Input } from '@heroui/react'
+import { Button, Input } from '@heroui/react'
 import { Head, router } from '@inertiajs/react'
 import dayjs from 'dayjs'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import ConfirmDeleteModal from '../../../Components/ConfirmDeleteModal'
 import ConfirmPayModal from '../../../Components/ConfirmPayModal'
-import ExpenseCreateModal from '../../../Components/ExpenseCreateModal'
-import ExpenseEditModal from '../../../Components/ExpenseEditModal'
+import ExpenseModal from '../../../Components/ExpenseModal'
 import IncomeCreateModal from '../../../Components/IncomeCreateModal'
 import IncomeEditModal from '../../../Components/IncomeEditModal'
 import IncomeGroup from '../../../Components/IncomeGroup'
@@ -241,7 +239,7 @@ export default function BudgetIndex({
 				onOpenChange={setCreateIncomeOpen}
 				groupId={schedules[0]?.group_id ?? 0}
 			/>
-			<ExpenseCreateModal
+			<ExpenseModal
 				isOpen={createExpenseOpen}
 				onOpenChange={setCreateExpenseOpen}
 				groupId={schedules[0]?.group_id ?? 0}
@@ -252,7 +250,7 @@ export default function BudgetIndex({
 				onOpenChange={setEditIncomeOpen}
 				income={editingIncome}
 			/>
-			<ExpenseEditModal
+			<ExpenseModal
 				isOpen={editExpenseOpen}
 				onOpenChange={setEditExpenseOpen}
 				expense={editingExpense}
