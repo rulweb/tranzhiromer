@@ -18,7 +18,6 @@ class PayScheduleRequest extends FormRequest
     {
         return [
             'leftover' => ['required', 'numeric'],
-            'is_cash_leftover' => ['required', 'boolean'],
         ];
     }
 
@@ -30,8 +29,6 @@ class PayScheduleRequest extends FormRequest
         return [
             'leftover.required' => 'Укажите остаток',
             'leftover.numeric' => 'Остаток должен быть числом',
-            'is_cash_leftover.required' => 'Укажите является ли остаток наличными средствами',
-            'is_cash_leftover.boolean' => 'Метка должна быть булевым значением',
         ];
     }
 }
