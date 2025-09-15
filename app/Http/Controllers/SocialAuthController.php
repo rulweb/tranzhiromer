@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Contracts\Auth\Authenticatable;
+use Http;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
-use Laravel\Socialite\Facades\Socialite;
+use Log;
+use Session;
 
 class SocialAuthController extends Controller
 {
@@ -20,42 +22,84 @@ class SocialAuthController extends Controller
 
     public function redirect(string $provider): RedirectResponse
     {
-        $this->guardSupportedProvider($provider);
+        $clientId = config('services.yandex.client_id');
+        $redirectUri = config('services.yandex.redirect');
+        $state = Str::random(40);
 
-        if ($provider === 'vkid') {
-            // For VK we usually need the 'email' scope to receive email
-            return Socialite::driver('vkid')->redirect();
-        }
+        Session::put('yandex_state', $state);
 
-        if ($provider === 'yandex') {
-            // Request email scope from Yandex
-            return Socialite::driver('yandex')->redirect();
-        }
+        $url = "https://oauth.yandex.ru/authorize?" . http_build_query([
+                'response_type' => 'code',
+                'client_id' => $clientId,
+                'redirect_uri' => $redirectUri,
+                'state' => $state,
+            ]);
 
-        return Socialite::driver($provider)->redirect();
+        return redirect($url);
     }
 
     public function callback(string $provider): RedirectResponse
     {
-        $this->guardSupportedProvider($provider);
+        $code = request('code');
+        $state = request('state');
 
-        $socialUser = Socialite::driver($provider)->user();
-
-        $email = $socialUser->getEmail();
-        $avatar = $socialUser->getAvatar();
-        $name = $socialUser->getName() ?: ($socialUser->getNickname() ?: 'User');
-
-        if (empty($email)) {
-            // Synthesize unique email when provider doesn't return one
-            $email = match ($provider) {
-                'vkid' => 'vk_'.$socialUser->getId().'@vk.local',
-                'yandex' => 'yandex_'.$socialUser->getId().'@yandex.local',
-                default => 'social_'.$socialUser->getId().'@example.local',
-            };
+        // Проверка state для защиты от CSRF
+        if ($state !== Session::pull('yandex_state')) {
+            abort(403, 'Invalid state');
         }
 
-        /** @var Authenticatable|User $user */
-        $user = User::query()->updateOrCreate(
+        // Получаем access_token
+        $response = Http::asForm()->post('https://oauth.yandex.ru/token', [
+            'grant_type' => 'authorization_code',
+            'code' => $code,
+            'client_id' => config('services.yandex.client_id'),
+            'client_secret' => config('services.yandex.client_secret'),
+            'redirect_uri' => config('services.yandex.redirect'),
+        ]);
+
+        if ($response->failed()) {
+            return redirect('/lk/login')->withErrors(['yandex' => 'Ошибка получения токена']);
+        }
+
+        $tokenData = $response->json();
+        $accessToken = $tokenData['access_token'];
+
+        // Получаем информацию о пользователе
+        $userResponse = Http::withToken($accessToken)->get('https://login.yandex.ru/info?format=json');
+
+        if ($userResponse->failed()) {
+            return redirect('/lk/login')->withErrors(['yandex' => 'Ошибка получения данных пользователя']);
+        }
+
+        $userData = $userResponse->json();
+
+        Log::info('yandex-callback='. json_encode($userData, JSON_UNESCAPED_UNICODE));
+
+        $email = $userData['default_email'] ?? null;
+        if (empty($email) && count($userData['emails']) > 0) {
+            $email = $userData['emails'][0] ?? null;
+        }
+        if (!$email) {
+            return redirect('/lk/login')->withErrors(['yandex' => 'Email не предоставлен']);
+        }
+
+        if (!empty($userData['real_name'])) {
+            $name = Arr::get($userData, 'real_name');
+        } else if (!empty($userData['display_name'])) {
+            $name = Arr::get($userData, 'display_name');
+        } else if (!empty($userData['first_name']) || !empty($userData['last_name'])) {
+            $name = Arr::get($userData, 'first_name', '') . ' ' . Arr::get($userData, 'last_name', '');
+        } else {
+            $name = Arr::get($userData, 'login');
+        }
+
+        $avatar = null;
+        if (!empty($userData['default_avatar_id'])) {
+            $avatar = 'https://avatars.yandex.net/get-yapic/'.Arr::get($userData, 'default_avatar_id').'/islands-200';
+        }
+
+        // Находим или создаём пользователя
+        $user = User::firstOrCreate(
             ['email' => $email],
             [
                 'name' => $name,
@@ -63,16 +107,10 @@ class SocialAuthController extends Controller
             ]
         );
 
+        // Авторизуем пользователя
         Auth::login($user, true);
 
-        return redirect()->route('lk.index');
-    }
-
-    protected function guardSupportedProvider(string $provider): void
-    {
-        if (! in_array($provider, ['vkid', 'yandex'], true)) {
-            abort(404);
-        }
+        return redirect('/lk')->with('success', 'Успешный вход через Яндекс!');
     }
 
     public function logout(Request $request): RedirectResponse
