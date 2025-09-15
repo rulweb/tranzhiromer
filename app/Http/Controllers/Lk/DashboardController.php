@@ -8,10 +8,8 @@ use App\Models\Group;
 use App\Models\Schedule;
 use App\Models\SchedulePayment;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
-use Inertia\Response;
 use Inertia\Response as InertiaResponse;
 
 class DashboardController extends Controller
@@ -110,11 +108,8 @@ class DashboardController extends Controller
             // Convert to label groups
             $incomeGroups = [];
             foreach ($byDay as $dayNum => $items) {
-                $label = Carbon::create($monthCarbon->year, $monthCarbon->month, (int) $dayNum)
-                    ->locale($locale)
-                    ->translatedFormat('j F');
                 $incomeGroups[] = [
-                    'day' => $label,
+                    'day' => Carbon::create($monthCarbon->year, $monthCarbon->month, (int) $dayNum),
                     'items' => $items,
                 ];
             }
@@ -156,11 +151,8 @@ class DashboardController extends Controller
         ksort($flatByDay);
         $flatGroups = [];
         foreach ($flatByDay as $dayNum => $items) {
-            $label = Carbon::create($monthCarbon->year, $monthCarbon->month, (int) $dayNum)
-                ->locale($locale)
-                ->translatedFormat('j F');
             $flatGroups[] = [
-                'day' => $label,
+                'day' => Carbon::create($monthCarbon->year, $monthCarbon->month, (int) $dayNum),
                 'items' => $items,
             ];
         }

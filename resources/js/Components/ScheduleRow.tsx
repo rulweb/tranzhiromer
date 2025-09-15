@@ -53,7 +53,9 @@ export default function ScheduleRow({
 	const end = schedule.end_date ? dayjs(schedule.end_date) : null
 	return (
 		<Card>
-			<CardBody className='flex flex-row items-center justify-between p-3 sm:p-4 gap-0'>
+			<CardBody
+				className={`flex flex-row items-center justify-between p-3 sm:p-4 gap-0 `}
+			>
 				<div className='flex items-center gap-2'>
 					<div className='hidden lg:block'>
 						<ScheduleIcon

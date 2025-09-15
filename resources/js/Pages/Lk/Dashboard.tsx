@@ -152,10 +152,18 @@ export default function Dashboard({
 						{section.days.map(group => (
 							<div
 								key={`${section.income.id}-${group.day}`}
-								className='flex flex-col gap-2'
+								className={`flex flex-col gap-2`}
 							>
-								<div className='sticky top-0 z-10 bg-white/70 dark:bg-black/50 backdrop-blur px-1 py-1 text-xs font-semibold text-gray-600 dark:text-gray-300'>
-									{group.day}
+								<div
+									className={`sticky top-0 z-10 bg-white/70 dark:bg-black/50 backdrop-blur px-1 py-1 text-gray-600 dark:text-gray-300 ${
+										dayjs(group.day).isToday()
+											? 'font-bold text-xl text-warning underline underline-offset-4'
+											: dayjs(group.day).isBefore()
+												? 'text-2xs font-semibold line-through'
+												: 'text-2xs font-semibold'
+									}`}
+								>
+									{dayjs(group.day).format('DD MMMM')}
 								</div>
 								{group.items.map(e => (
 									<ScheduleRow
