@@ -159,7 +159,7 @@ export default function LkLayout({ children }: PropsWithChildren) {
 					className='hidden sm:flex'
 				>
 					<NavbarItem isActive={isActive({ href: '/lk' })}>
-						<Link href='/lk'>Дашборд</Link>
+						<Link href='/lk'>Бюджет</Link>
 					</NavbarItem>
 				</NavbarContent>
 				<NavbarContent justify='end'>
@@ -401,7 +401,7 @@ export default function LkLayout({ children }: PropsWithChildren) {
 								aria-current={isActive({ href: '/lk' }) ? 'page' : undefined}
 							>
 								<Home size={18} />
-								<span>Дашборд</span>
+								<span>Бюджет</span>
 							</Link>
 						</li>
 					</ul>
