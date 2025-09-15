@@ -27,7 +27,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property string|null $expected_leftover Ожидаемый остаток с платежа
- * @property bool $is_paid Отметка об оплате
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Schedule> $children
  * @property-read int|null $children_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Correction> $corrections
@@ -49,7 +48,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Schedule whereGroupId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Schedule whereIcon($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Schedule whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Schedule whereIsPaid($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Schedule whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Schedule whereParentId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Schedule wherePeriodType($value)
@@ -79,9 +77,6 @@ class Schedule extends Model
         'single_date',
         'amount',
         'expected_leftover',
-        'leftover',
-        'is_paid',
-        'is_cash_leftover',
         'end_date',
     ];
 
@@ -90,7 +85,6 @@ class Schedule extends Model
         'period_type' => SchedulePeriodType::class,
         'end_date' => 'date',
         'single_date' => 'date',
-        'is_paid' => 'boolean',
         'is_credit' => 'boolean',
     ];
 
@@ -112,5 +106,10 @@ class Schedule extends Model
     public function corrections(): HasMany
     {
         return $this->hasMany(Correction::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(SchedulePayment::class);
     }
 }

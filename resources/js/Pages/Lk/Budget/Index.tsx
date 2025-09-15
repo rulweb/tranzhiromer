@@ -15,10 +15,25 @@ import LkLayout from '../../../Layouts/LkLayout'
 
 import { Schedule } from '@/types'
 
-type Props = { schedules: Schedule[]; month: string }
+type DayItem = {
+	id: number
+	name: string
+	description: string | null
+	icon: string | null
+	amount: number
+	expected_leftover: number
+	is_cash_leftover: boolean
+	is_paid: boolean
+	leftover: number
+}
+
+type DayGroup = { day: string; items: DayItem[] }
+
+type Props = { schedules: Schedule[]; days: DayGroup[]; month: string }
 
 export default function BudgetIndex({
 	schedules: initial,
+	days,
 	month: initialMonth
 }: Props) {
 	const [schedules, setSchedules] = useState<Schedule[]>(initial)
@@ -57,6 +72,7 @@ export default function BudgetIndex({
 		})
 	}, [month])
 
+	// Client-side grouping by incomes is not needed for daily output anymore.
 	const incomes = useMemo(
 		() => schedules.filter(s => s.type === 'income'),
 		[schedules]
@@ -79,6 +95,60 @@ export default function BudgetIndex({
 	const unassignedTotal = useMemo(
 		() => unassigned.reduce((sum, e) => sum + Number(e.amount), 0),
 		[unassigned]
+	)
+
+	const renderByDays = () => (
+		<div className='flex flex-col gap-3'>
+			{days.map(group => (
+				<div key={group.day} className='flex flex-col gap-2'>
+					<div className='sticky top-0 z-10 bg-white/70 dark:bg-black/50 backdrop-blur px-1 py-1 text-xs font-semibold text-gray-600 dark:text-gray-300'>
+						{group.day}
+					</div>
+					{group.items.map(e => (
+						<ScheduleRow
+							key={e.id}
+							schedule={{
+								id: e.id,
+								name: e.name,
+								description: e.description,
+								icon: e.icon,
+								type: 'expense',
+								period_type: 'monthly',
+								amount: e.amount,
+								expected_leftover: e.expected_leftover,
+								leftover: e.leftover,
+								is_paid: e.is_paid,
+								is_cash_leftover: e.is_cash_leftover,
+								end_date: null,
+								parent_id: null,
+								group_id: schedules[0]?.group_id ?? 0,
+								created_at: '',
+								updated_at: ''
+							} as unknown as Schedule}
+							isExpense
+							onPaid={() => {
+								// find full schedule from list to keep modal flows working
+								const full = schedules.find(s => s.id === e.id) || null
+								if (!full) return
+								setPayingExpense(full)
+								setPayLeftover(
+									full.expected_leftover != null
+										? String(full.expected_leftover)
+										: '0'
+								)
+								setPayOpen(true)
+							}}
+							onUnpaid={() => {
+								const full = schedules.find(s => s.id === e.id) || null
+								if (!full) return
+								setUnpayingExpense(full)
+								setUnpayOpen(true)
+							}}
+						/>
+					))}
+				</div>
+			))}
+		</div>
 	)
 
 	return (
@@ -148,6 +218,7 @@ export default function BudgetIndex({
 				</div>
 			</div>
 
+			{/* Unassigned section kept for organizational view if needed; can be revisited later. */}
 			{unassigned.length > 0 && (
 				<div className='mb-4'>
 					<div className='rounded-lg border border-red-200 dark:border-red-900 bg-red-50/60 dark:bg-red-900/20 p-3'>
@@ -194,6 +265,9 @@ export default function BudgetIndex({
 				</div>
 			)}
 
+			{renderByDays()}
+
+			{/* Legacy income grouping UI below (disabled)
 			<div className='flex flex-col gap-3'>
 				{incomes.map(inc => (
 					<IncomeGroup
@@ -226,6 +300,7 @@ export default function BudgetIndex({
 					/>
 				))}
 			</div>
+			*/}
 
 			<MoveExpenseModal
 				isOpen={moveOpen}
@@ -267,7 +342,7 @@ export default function BudgetIndex({
 					if (!payingExpense) return
 					await router.post(
 						`/lk/schedules/${payingExpense.id}/pay`,
-						{ leftover: payLeftover },
+						{ leftover: payLeftover, month },
 						{
 							preserveScroll: true,
 							onSuccess: () => {
@@ -300,7 +375,7 @@ export default function BudgetIndex({
 					if (!unpayingExpense) return
 					await router.post(
 						`/lk/schedules/${unpayingExpense.id}/unpay`,
-						{},
+						{ month },
 						{
 							preserveScroll: true,
 							onSuccess: () => {

@@ -1,14 +1,14 @@
 import { Card } from '@heroui/react'
+import { Input } from '@heroui/react'
+import { router } from '@inertiajs/react'
 import dayjs from 'dayjs'
 import { Calendar } from 'lucide-react'
+import { useState } from 'react'
 
+import ConfirmPayModal from '../../Components/ConfirmPayModal'
 import ScheduleRow from '../../Components/ScheduleRow'
 import LkLayout from '../../Layouts/LkLayout'
 import { Schedule } from '../../types'
-import ConfirmPayModal from '../../Components/ConfirmPayModal'
-import { router } from '@inertiajs/react'
-import { useState } from 'react'
-import { Input } from '@heroui/react'
 
 type Props = {
 	schedules: Schedule[]
@@ -117,7 +117,7 @@ export default function Dashboard({ schedules }: Props) {
 							<div className='sticky top-0 z-10 bg-white/70 dark:bg-black/50 backdrop-blur px-1 py-1 text-xs font-semibold text-gray-600 dark:text-gray-300'>
 								{g.date.format('D MMMM')}
 							</div>
-       {g.items.map(s => (
+							{g.items.map(s => (
 								<ScheduleRow
 									key={s.id}
 									schedule={s}
@@ -125,7 +125,9 @@ export default function Dashboard({ schedules }: Props) {
 									onPaid={exp => {
 										setPayingExpense(exp)
 										setPayLeftover(
-											exp.expected_leftover != null ? String(exp.expected_leftover) : '0'
+											exp.expected_leftover != null
+												? String(exp.expected_leftover)
+												: '0'
 										)
 										setPayOpen(true)
 									}}
@@ -144,14 +146,18 @@ export default function Dashboard({ schedules }: Props) {
 				confirmText='Отметить как оплачено'
 				onConfirm={async () => {
 					if (!payingExpense) return
-					await router.post(`/lk/schedules/${payingExpense.id}/pay`, { leftover: payLeftover }, {
-						preserveScroll: true,
-						onSuccess: () => {
-							setPayingExpense(null)
-							setPayLeftover('0')
-							router.reload({ only: ['schedules'] })
+					await router.post(
+						`/lk/schedules/${payingExpense.id}/pay`,
+						{ leftover: payLeftover, month: dayjs().format('YYYY-MM') },
+						{
+							preserveScroll: true,
+							onSuccess: () => {
+								setPayingExpense(null)
+								setPayLeftover('0')
+								router.reload({ only: ['schedules'] })
+							}
 						}
-					})
+					)
 				}}
 			>
 				<div className='mt-2'>

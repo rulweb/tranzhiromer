@@ -18,6 +18,7 @@ class PayScheduleRequest extends FormRequest
     {
         return [
             'leftover' => ['required', 'numeric'],
+            'month' => ['nullable', 'date_format:Y-m'],
         ];
     }
 
