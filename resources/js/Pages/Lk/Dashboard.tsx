@@ -89,11 +89,11 @@ export default function Dashboard({
 			{incomeDays.map(section => (
 				<Card
 					key={section.income.id}
-					className='flex flex-col gap-2 mx-2 sm:mx-0'
+					className='flex flex-col gap-2 mx-2 sm:mx-0 px-3 sm:px-6 md:px-10'
 				>
 					<CardHeader className='flex flex-col sm:flex-row sm:items-center justify-between gap-2'>
 						<div className='text-base font-semibold'>{section.income.name}</div>
-						<div className='flex flex-row flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600'>
+						<div className='flex flex-col lg:flex-row flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600'>
 							<span className='font-medium text-success'>
 								Доход: {Number(section.income.amount).toLocaleString('ru-RU')} ₽
 							</span>
@@ -154,23 +154,23 @@ export default function Dashboard({
 								).toLocaleString('ru-RU')}{' '}
 								₽
 							</span>
-							<span className='font-medium text-warning'>
-								<Button
-									isIconOnly
-									size='sm'
-									variant='flat'
-									onPress={() => {
-										setEditingIncome(section.income)
-										setEditIncomeOpen(true)
-									}}
-									aria-label='edit'
-								>
-									<Pencil size={16} />
-								</Button>
-							</span>
 						</div>
+						<span className='font-medium text-warning'>
+							<Button
+								isIconOnly
+								size='sm'
+								variant='flat'
+								onPress={() => {
+									setEditingIncome(section.income)
+									setEditIncomeOpen(true)
+								}}
+								aria-label='edit'
+							>
+								<Pencil size={16} />
+							</Button>
+						</span>
 					</CardHeader>
-					<CardBody className='flex flex-col gap-3 px-3 sm:px-6 md:px-10'>
+					<CardBody className='flex flex-col gap-3'>
 						{section.days.map(group => (
 							<div
 								key={`${section.income.id}-${group.day}`}
@@ -209,9 +209,10 @@ export default function Dashboard({
 	return (
 		<LkLayout>
 			<Head title={`Бюджет на ${dayjs(month + '-01').format('MMMM YYYY')}`} />
-			<div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4'>
+
+			<div className='flex flex-col lg:flex-row items-center justify-between gap-3 mb-4'>
 				<h1 className='text-xl font-semibold'>Бюджет на</h1>
-				<div className='flex flex-wrap items-center gap-2'>
+				<div className='flex flex-nowrap items-center gap-2'>
 					<Button
 						size='sm'
 						variant='light'
@@ -254,6 +255,8 @@ export default function Dashboard({
 					>
 						&gt;
 					</Button>
+				</div>
+				<div className='flex flex-nowrap items-center gap-2'>
 					<Button
 						size='sm'
 						variant='bordered'
