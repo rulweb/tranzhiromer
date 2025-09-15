@@ -53,15 +53,22 @@ class SchedulesController extends Controller
             ->get()
             ->keyBy('schedule_id');
 
-        // Build grouped data by day of month for the requested month
+        // Build grouped data: first by incomes, then expenses grouped by day inside each income
         $locale = 'ru';
         $monthCarbon = $monthDate->copy();
         $groups = [];
 
-        // prepare map day => items
-        $byDay = [];
-        foreach ($schedules as $s) {
-            // determine day number within month
+        // Split schedules
+        $incomes = $schedules->where('type', \App\Enums\ScheduleType::INCOME);
+        $expenses = $schedules->where('type', \App\Enums\ScheduleType::EXPENSE);
+
+        // Map schedule_id => payment once
+        $getPayment = function (Schedule $s) use ($payments) {
+            return $payments->get($s->id);
+        };
+
+        // Helper to resolve day number for a schedule within month
+        $resolveDay = function (Schedule $s) use ($monthCarbon) {
             $dayNum = null;
             if ($s->period_type === \App\Enums\SchedulePeriodType::ONE_TIME && $s->single_date) {
                 if ($s->single_date->isSameMonth($monthCarbon)) {
@@ -70,15 +77,72 @@ class SchedulesController extends Controller
             } elseif ($s->day_of_month) {
                 $dayNum = min((int) $s->day_of_month, $monthCarbon->daysInMonth);
             } else {
-                // fallback: put to first day if nothing defined
                 $dayNum = 1;
             }
 
-            if ($dayNum === null) {
-                continue; // one_time but not in this month
+            return $dayNum;
+        };
+
+        // For each income, collect its expenses and group them by day
+        foreach ($incomes as $income) {
+            $children = $expenses->where('parent_id', $income->id);
+
+            // Build day => items for this income
+            $byDay = [];
+            foreach ($children as $s) {
+                $dayNum = $resolveDay($s);
+                if ($dayNum === null) {
+                    continue;
+                }
+                $p = $getPayment($s);
+                $item = [
+                    'id' => $s->id,
+                    'name' => $s->name,
+                    'description' => $s->description,
+                    'icon' => $s->icon,
+                    'amount' => (float) $s->amount,
+                    'expected_leftover' => $s->expected_leftover !== null ? (float) $s->expected_leftover : 0.0,
+                    'is_cash_leftover' => (bool) ($p?->is_cash_leftover ?? false),
+                    'is_paid' => $p !== null,
+                    'leftover' => $p?->leftover !== null ? (float) $p->leftover : 0.0,
+                ];
+                $byDay[$dayNum] = array_merge($byDay[$dayNum] ?? [], [$item]);
             }
 
-            $p = $payments->get($s->id);
+            ksort($byDay);
+            // Convert to label groups
+            $incomeGroups = [];
+            foreach ($byDay as $dayNum => $items) {
+                $label = Carbon::create($monthCarbon->year, $monthCarbon->month, (int) $dayNum)
+                    ->locale($locale)
+                    ->translatedFormat('j F');
+                $incomeGroups[] = [
+                    'day' => $label,
+                    'items' => $items,
+                ];
+            }
+
+            // Push a section per income keeping backward compatibility by nesting under days_by_income
+            $groups[] = [
+                'income' => [
+                    'id' => $income->id,
+                    'name' => $income->name,
+                    'amount' => (float) $income->amount,
+                    'description' => $income->description,
+                    'icon' => $income->icon,
+                ],
+                'days' => $incomeGroups,
+            ];
+        }
+
+        // Additionally, keep flat day groups for all expenses to not break UI that expects `days` as DayGroup[]
+        $flatByDay = [];
+        foreach ($expenses as $s) {
+            $dayNum = $resolveDay($s);
+            if ($dayNum === null) {
+                continue;
+            }
+            $p = $getPayment($s);
             $item = [
                 'id' => $s->id,
                 'name' => $s->name,
@@ -90,17 +154,15 @@ class SchedulesController extends Controller
                 'is_paid' => $p !== null,
                 'leftover' => $p?->leftover !== null ? (float) $p->leftover : 0.0,
             ];
-            $byDay[$dayNum] = array_merge($byDay[$dayNum] ?? [], [$item]);
+            $flatByDay[$dayNum] = array_merge($flatByDay[$dayNum] ?? [], [$item]);
         }
-
-        // sort days asc and format labels
-        ksort($byDay);
-        foreach ($byDay as $dayNum => $items) {
+        ksort($flatByDay);
+        $flatGroups = [];
+        foreach ($flatByDay as $dayNum => $items) {
             $label = Carbon::create($monthCarbon->year, $monthCarbon->month, (int) $dayNum)
                 ->locale($locale)
                 ->translatedFormat('j F');
-
-            $groups[] = [
+            $flatGroups[] = [
                 'day' => $label,
                 'items' => $items,
             ];
@@ -108,7 +170,10 @@ class SchedulesController extends Controller
 
         return Inertia::render('Lk/Budget/Index', [
             'schedules' => $schedules,
-            'days' => $groups,
+            // Keep original flat day grouping for backward compatibility
+            'days' => $flatGroups,
+            // New structure: first by income, then by days inside each income
+            'incomeDays' => $groups,
             'month' => $monthStr,
             'groupId' => $group->id,
         ]);

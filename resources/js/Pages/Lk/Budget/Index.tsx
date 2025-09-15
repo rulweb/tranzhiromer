@@ -1,4 +1,4 @@
-import { Button, Input } from '@heroui/react'
+import { Button, Card, CardBody, CardHeader, Input } from '@heroui/react'
 import { Head, router } from '@inertiajs/react'
 import dayjs from 'dayjs'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -8,7 +8,6 @@ import ConfirmPayModal from '../../../Components/ConfirmPayModal'
 import ExpenseModal from '../../../Components/ExpenseModal'
 import IncomeCreateModal from '../../../Components/IncomeCreateModal'
 import IncomeEditModal from '../../../Components/IncomeEditModal'
-import IncomeGroup from '../../../Components/IncomeGroup'
 import MoveExpenseModal from '../../../Components/MoveExpenseModal'
 import ScheduleRow from '../../../Components/ScheduleRow'
 import LkLayout from '../../../Layouts/LkLayout'
@@ -29,11 +28,26 @@ type DayItem = {
 
 type DayGroup = { day: string; items: DayItem[] }
 
-type Props = { schedules: Schedule[]; days: DayGroup[]; month: string }
+type IncomeDaysItem = {
+	income: {
+		id: number
+		name: string
+		amount: number
+		description: string | null
+		icon: string | null
+	}
+	days: DayGroup[]
+}
+
+type Props = {
+	schedules: Schedule[]
+	incomeDays: IncomeDaysItem[]
+	month: string
+}
 
 export default function BudgetIndex({
 	schedules: initial,
-	days,
+	incomeDays,
 	month: initialMonth
 }: Props) {
 	const [schedules, setSchedules] = useState<Schedule[]>(initial)
@@ -98,55 +112,110 @@ export default function BudgetIndex({
 	)
 
 	const renderByDays = () => (
-		<div className='flex flex-col gap-3'>
-			{days.map(group => (
-				<div key={group.day} className='flex flex-col gap-2'>
-					<div className='sticky top-0 z-10 bg-white/70 dark:bg-black/50 backdrop-blur px-1 py-1 text-xs font-semibold text-gray-600 dark:text-gray-300'>
-						{group.day}
-					</div>
-					{group.items.map(e => (
-						<ScheduleRow
-							key={e.id}
-							schedule={{
-								id: e.id,
-								name: e.name,
-								description: e.description,
-								icon: e.icon,
-								type: 'expense',
-								period_type: 'monthly',
-								amount: e.amount,
-								expected_leftover: e.expected_leftover,
-								leftover: e.leftover,
-								is_paid: e.is_paid,
-								is_cash_leftover: e.is_cash_leftover,
-								end_date: null,
-								parent_id: null,
-								group_id: schedules[0]?.group_id ?? 0,
-								created_at: '',
-								updated_at: ''
-							} as unknown as Schedule}
-							isExpense
-							onPaid={() => {
-								// find full schedule from list to keep modal flows working
-								const full = schedules.find(s => s.id === e.id) || null
-								if (!full) return
-								setPayingExpense(full)
-								setPayLeftover(
-									full.expected_leftover != null
-										? String(full.expected_leftover)
-										: '0'
-								)
-								setPayOpen(true)
-							}}
-							onUnpaid={() => {
-								const full = schedules.find(s => s.id === e.id) || null
-								if (!full) return
-								setUnpayingExpense(full)
-								setUnpayOpen(true)
-							}}
-						/>
-					))}
-				</div>
+		<div className='flex flex-col gap-4'>
+			{incomeDays.map(section => (
+				<Card
+					key={section.income.id}
+					className='flex flex-col gap-2 mx-2 sm:mx-0'
+				>
+					<CardHeader className='flex flex-col sm:flex-row sm:items-center justify-between gap-2'>
+						<div className='text-base font-semibold'>{section.income.name}</div>
+						<div className='flex flex-row flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600'>
+							<span className='font-medium text-success'>
+								Доход: {Number(section.income.amount).toLocaleString('ru-RU')} ₽
+							</span>
+							<span className='font-medium text-danger'>
+								Расходы:{' '}
+								{Number(
+									section.days.reduce(
+										(sum, day) =>
+											sum +
+											day.items.reduce(
+												(daySum, item) => daySum + item.amount,
+												0
+											),
+										0
+									)
+								).toLocaleString('ru-RU')}{' '}
+								₽
+							</span>
+							<span className='font-medium text-warning'>
+								Баланс:{' '}
+								{Number(
+									section.income.amount -
+										section.days.reduce(
+											(sum, day) =>
+												sum +
+												day.items.reduce(
+													(daySum, item) =>
+														daySum +
+														item.amount -
+														(item.leftover || item.expected_leftover || 0),
+													0
+												),
+											0
+										)
+								).toLocaleString('ru-RU')}{' '}
+								₽
+							</span>
+						</div>
+					</CardHeader>
+					<CardBody className='flex flex-col gap-3 px-3 sm:px-6 md:px-10'>
+						{section.days.map(group => (
+							<div
+								key={`${section.income.id}-${group.day}`}
+								className='flex flex-col gap-2'
+							>
+								<div className='sticky top-0 z-10 bg-white/70 dark:bg-black/50 backdrop-blur px-1 py-1 text-xs font-semibold text-gray-600 dark:text-gray-300'>
+									{group.day}
+								</div>
+								{group.items.map(e => (
+									<ScheduleRow
+										key={e.id}
+										schedule={
+											{
+												id: e.id,
+												name: e.name,
+												description: e.description,
+												icon: e.icon,
+												type: 'expense',
+												period_type: 'monthly',
+												amount: e.amount,
+												expected_leftover: e.expected_leftover,
+												leftover: e.leftover,
+												is_paid: e.is_paid,
+												is_cash_leftover: e.is_cash_leftover,
+												end_date: null,
+												parent_id: null,
+												group_id: schedules[0]?.group_id ?? 0,
+												created_at: '',
+												updated_at: ''
+											} as unknown as Schedule
+										}
+										isExpense
+										onPaid={() => {
+											const full = schedules.find(s => s.id === e.id) || null
+											if (!full) return
+											setPayingExpense(full)
+											setPayLeftover(
+												full.expected_leftover != null
+													? String(full.expected_leftover)
+													: '0'
+											)
+											setPayOpen(true)
+										}}
+										onUnpaid={() => {
+											const full = schedules.find(s => s.id === e.id) || null
+											if (!full) return
+											setUnpayingExpense(full)
+											setUnpayOpen(true)
+										}}
+									/>
+								))}
+							</div>
+						))}
+					</CardBody>
+				</Card>
 			))}
 		</div>
 	)
@@ -266,41 +335,6 @@ export default function BudgetIndex({
 			)}
 
 			{renderByDays()}
-
-			{/* Legacy income grouping UI below (disabled)
-			<div className='flex flex-col gap-3'>
-				{incomes.map(inc => (
-					<IncomeGroup
-						key={inc.id}
-						income={inc}
-						expenses={expensesByParent.get(inc.id) || []}
-						onMoveExpense={e => {
-							setMovingExpense(e)
-							setMoveOpen(true)
-						}}
-						onEditIncome={incSel => {
-							setEditingIncome(incSel)
-							setEditIncomeOpen(true)
-						}}
-						onEditExpense={expSel => {
-							setEditingExpense(expSel)
-							setEditExpenseOpen(true)
-						}}
-						onPayExpense={s => {
-							setPayingExpense(s)
-							setPayLeftover(
-								s.expected_leftover != null ? String(s.expected_leftover) : '0'
-							)
-							setPayOpen(true)
-						}}
-						onUnpayExpense={s => {
-							setUnpayingExpense(s)
-							setUnpayOpen(true)
-						}}
-					/>
-				))}
-			</div>
-			*/}
 
 			<MoveExpenseModal
 				isOpen={moveOpen}
