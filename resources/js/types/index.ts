@@ -24,6 +24,7 @@ export type Schedule = {
 	amount: number
 	expected_leftover: number | null
 	leftover: number | null
+	payment_id: number | null
 	is_paid?: boolean
 	is_cash_leftover?: boolean
 	day_of_month?: number

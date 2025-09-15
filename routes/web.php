@@ -24,8 +24,6 @@ Route::middleware('web')->group(function () {
         Route::post('logout', [\App\Http\Controllers\SocialAuthController::class, 'logout'])
             ->name('logout');
 
-        Route::get('budget', [\App\Http\Controllers\Lk\SchedulesController::class, 'index'])->name('lk.budget');
-
         // Schedules CRUD via Inertia
         Route::post('schedules', [\App\Http\Controllers\Lk\SchedulesController::class, 'store'])->name('lk.schedules.store');
         Route::patch('schedules/{schedule}', [\App\Http\Controllers\Lk\SchedulesController::class, 'update'])->name('lk.schedules.update');

@@ -161,9 +161,6 @@ export default function LkLayout({ children }: PropsWithChildren) {
 					<NavbarItem isActive={isActive({ href: '/lk' })}>
 						<Link href='/lk'>Дашборд</Link>
 					</NavbarItem>
-					<NavbarItem isActive={isActive({ href: '/lk/budget' })}>
-						<Link href='/lk/budget'>Бюджет</Link>
-					</NavbarItem>
 				</NavbarContent>
 				<NavbarContent justify='end'>
 					<NavbarItem>
@@ -405,23 +402,6 @@ export default function LkLayout({ children }: PropsWithChildren) {
 							>
 								<Home size={18} />
 								<span>Дашборд</span>
-							</Link>
-						</li>
-						<li>
-							<Link
-								href='/lk/budget'
-								className={
-									'flex flex-col items-center justify-center gap-1 text-xs h-full ' +
-									(isActive({ href: '/lk/budget' })
-										? 'text-primary-600'
-										: 'text-foreground-500')
-								}
-								aria-current={
-									isActive({ href: '/lk/budget' }) ? 'page' : undefined
-								}
-							>
-								<Wallet size={18} />
-								<span>Бюджет</span>
 							</Link>
 						</li>
 					</ul>
