@@ -4,11 +4,11 @@
 git pull
 
 # Install PHP dependencies
-composer install --no-interaction --prefer-dist --optimize-autoloader
+docker compose exec web composer install --no-interaction --prefer-dist --optimize-autoloader
 
 # Run database migrations
-php artisan migrate --force
+docker compose exec web php artisan migrate --force
 
 # Install and build frontend assets
-npm install
-npm run build
+docker compose exec web npm ci
+docker compose exec web npm run build
