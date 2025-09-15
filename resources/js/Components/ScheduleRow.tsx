@@ -16,9 +16,6 @@ import { ScheduleIcon } from './ScheduleIcon'
 export type ScheduleRowProps = {
 	schedule: Schedule
 	onEdit?: (s: Schedule) => void
-	onMove?: (s: Schedule) => void
-	onPaid?: (s: Schedule) => void
-	onUnpaid?: (s: Schedule) => void
 	isExpense?: boolean
 }
 
@@ -45,9 +42,6 @@ function formatPeriodicity(s: Schedule): string {
 export default function ScheduleRow({
 	schedule,
 	onEdit,
-	onMove,
-	onPaid,
-	onUnpaid,
 	isExpense
 }: ScheduleRowProps) {
 	const end = schedule.end_date ? dayjs(schedule.end_date) : null
@@ -144,17 +138,6 @@ export default function ScheduleRow({
 					</div>
 					<div className='flex flex-col items-center gap-2'>
 						<div className='flex items-center gap-2'>
-							{onMove && (
-								<Button
-									isIconOnly
-									size='sm'
-									variant='flat'
-									onPress={() => onMove(schedule)}
-									aria-label='move'
-								>
-									<MoveVertical size={16} />
-								</Button>
-							)}
 							{onEdit && (
 								<Button
 									isIconOnly
@@ -167,25 +150,6 @@ export default function ScheduleRow({
 								</Button>
 							)}
 						</div>
-						{isExpense && !schedule.is_paid && (
-							<Button
-								size='sm'
-								variant='flat'
-								onPress={() => onPaid?.(schedule)}
-							>
-								Оплатить
-							</Button>
-						)}
-						{isExpense && schedule.is_paid && (
-							<Button
-								size='sm'
-								variant='flat'
-								color='warning'
-								onPress={() => onUnpaid?.(schedule)}
-							>
-								Отменить оплату
-							</Button>
-						)}
 					</div>
 				</div>
 			</CardBody>

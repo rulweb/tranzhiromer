@@ -1,13 +1,11 @@
-import { Button, Card, CardBody, CardHeader, Input } from '@heroui/react'
+import { Button, Card, CardBody, CardHeader } from '@heroui/react'
 import { Head, router } from '@inertiajs/react'
 import dayjs from 'dayjs'
+import { Pencil } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import ConfirmDeleteModal from '../../Components/ConfirmDeleteModal'
-import ConfirmPayModal from '../../Components/ConfirmPayModal'
 import ExpenseModal from '../../Components/ExpenseModal'
-import IncomeCreateModal from '../../Components/IncomeCreateModal'
-import IncomeEditModal from '../../Components/IncomeEditModal'
+import IncomeModal from '../../Components/IncomeModal'
 import MoveExpenseModal from '../../Components/MoveExpenseModal'
 import ScheduleRow from '../../Components/ScheduleRow'
 import LkLayout from '../../Layouts/LkLayout'
@@ -17,13 +15,7 @@ import { Schedule } from '@/types'
 type DayGroup = { day: string; items: Schedule[] }
 
 type IncomeDaysItem = {
-	income: {
-		id: number
-		name: string
-		amount: number
-		description: string | null
-		icon: string | null
-	}
+	income: Schedule
 	days: DayGroup[]
 }
 
@@ -42,19 +34,12 @@ export default function Dashboard({
 	const [month, setMonth] = useState<string>(
 		initialMonth || dayjs().format('YYYY-MM')
 	)
-	const [moveOpen, setMoveOpen] = useState(false)
-	const [movingExpense, setMovingExpense] = useState<Schedule | null>(null)
 	const [createIncomeOpen, setCreateIncomeOpen] = useState<boolean>(false)
 	const [createExpenseOpen, setCreateExpenseOpen] = useState<boolean>(false)
 	const [editIncomeOpen, setEditIncomeOpen] = useState<boolean>(false)
 	const [editingIncome, setEditingIncome] = useState<Schedule | null>(null)
 	const [editExpenseOpen, setEditExpenseOpen] = useState<boolean>(false)
 	const [editingExpense, setEditingExpense] = useState<Schedule | null>(null)
-	const [payOpen, setPayOpen] = useState<boolean>(false)
-	const [payingExpense, setPayingExpense] = useState<Schedule | null>(null)
-	const [payLeftover, setPayLeftover] = useState<string>('0')
-	const [unpayOpen, setUnpayOpen] = useState<boolean>(false)
-	const [unpayingExpense, setUnpayingExpense] = useState<Schedule | null>(null)
 
 	// Keep schedules in sync with server props when they change
 	useEffect(() => {
@@ -128,23 +113,60 @@ export default function Dashboard({
 								₽
 							</span>
 							<span className='font-medium text-warning'>
-								Баланс:{' '}
+								Остаток кредитных:{' '}
 								{Number(
 									section.income.amount -
 										section.days.reduce(
 											(sum, day) =>
 												sum +
-												day.items.reduce(
-													(daySum, item) =>
-														daySum +
-														item.amount -
-														(item.leftover || item.expected_leftover || 0),
-													0
-												),
+												day.items
+													.filter(item => !item.is_cash_leftover)
+													.reduce(
+														(daySum, item) =>
+															daySum +
+															item.amount -
+															(item.leftover || item.expected_leftover || 0),
+														0
+													),
 											0
 										)
 								).toLocaleString('ru-RU')}{' '}
 								₽
+							</span>
+							<span className='font-medium text-warning'>
+								Остаток наличных:{' '}
+								{Number(
+									section.income.amount -
+										section.days.reduce(
+											(sum, day) =>
+												sum +
+												day.items
+													.filter(item => item.is_cash_leftover)
+													.reduce(
+														(daySum, item) =>
+															daySum +
+															item.amount -
+															(item.leftover || item.expected_leftover || 0),
+														0
+													),
+											0
+										)
+								).toLocaleString('ru-RU')}{' '}
+								₽
+							</span>
+							<span className='font-medium text-warning'>
+								<Button
+									isIconOnly
+									size='sm'
+									variant='flat'
+									onPress={() => {
+										setEditingIncome(section.income)
+										setEditIncomeOpen(true)
+									}}
+									aria-label='edit'
+								>
+									<Pencil size={16} />
+								</Button>
 							</span>
 						</div>
 					</CardHeader>
@@ -170,18 +192,9 @@ export default function Dashboard({
 										key={e.id}
 										schedule={e}
 										isExpense
-										onPaid={() => {
-											setPayingExpense(e)
-											setPayLeftover(
-												e.expected_leftover != null
-													? String(e.expected_leftover)
-													: '0'
-											)
-											setPayOpen(true)
-										}}
-										onUnpaid={() => {
-											setUnpayingExpense(e)
-											setUnpayOpen(true)
+										onEdit={s => {
+											setEditingExpense(s)
+											setEditExpenseOpen(true)
 										}}
 									/>
 								))}
@@ -279,26 +292,9 @@ export default function Dashboard({
 									key={e.id}
 									schedule={e}
 									isExpense
-									onMove={x => {
-										setMovingExpense(x)
-										setMoveOpen(true)
-									}}
 									onEdit={s => {
 										setEditingExpense(s)
 										setEditExpenseOpen(true)
-									}}
-									onPaid={s => {
-										setPayingExpense(s)
-										setPayLeftover(
-											s.expected_leftover != null
-												? String(s.expected_leftover)
-												: '0'
-										)
-										setPayOpen(true)
-									}}
-									onUnpaid={s => {
-										setUnpayingExpense(s)
-										setUnpayOpen(true)
 									}}
 								/>
 							))}
@@ -309,90 +305,26 @@ export default function Dashboard({
 
 			{renderByDays()}
 
-			<MoveExpenseModal
-				isOpen={moveOpen}
-				onOpenChange={setMoveOpen}
-				expense={movingExpense}
-				incomes={incomes}
-				onMoved={() => router.reload({ only: ['schedules'] })}
-			/>
-			<IncomeCreateModal
+			<IncomeModal
 				isOpen={createIncomeOpen}
 				onOpenChange={setCreateIncomeOpen}
 				groupId={schedules[0]?.group_id ?? 0}
 			/>
-			<ExpenseModal
-				isOpen={createExpenseOpen}
-				onOpenChange={setCreateExpenseOpen}
-				groupId={schedules[0]?.group_id ?? 0}
-				incomes={incomes}
-			/>
-			<IncomeEditModal
+			<IncomeModal
 				isOpen={editIncomeOpen}
 				onOpenChange={setEditIncomeOpen}
 				income={editingIncome}
+			/>
+			<ExpenseModal
+				isOpen={createExpenseOpen}
+				onOpenChange={setCreateExpenseOpen}
+				incomes={incomes}
 			/>
 			<ExpenseModal
 				isOpen={editExpenseOpen}
 				onOpenChange={setEditExpenseOpen}
 				expense={editingExpense}
 				incomes={incomes}
-			/>
-
-			<ConfirmPayModal
-				isOpen={payOpen}
-				onOpenChange={setPayOpen}
-				title='Подтверждение оплаты'
-				description='Укажите остаток и подтвердите проведение оплаты.'
-				confirmText='Отметить как оплачено'
-				onConfirm={async () => {
-					if (!payingExpense) return
-					await router.post(
-						`/lk/schedules/${payingExpense.id}/pay`,
-						{ leftover: payLeftover, month },
-						{
-							preserveScroll: true,
-							onSuccess: () => {
-								setPayingExpense(null)
-								setPayLeftover('')
-								router.reload({ only: ['schedules'] })
-							}
-						}
-					)
-				}}
-			>
-				<div className='mt-2'>
-					<Input
-						label='Остаток'
-						type='number'
-						step='0.01'
-						value={payLeftover}
-						onChange={e => setPayLeftover(e.target.value)}
-					/>
-				</div>
-			</ConfirmPayModal>
-
-			<ConfirmDeleteModal
-				isOpen={unpayOpen}
-				onOpenChange={setUnpayOpen}
-				title='Отменить оплату?'
-				description='Отменить отметку об оплате для этого расхода?'
-				confirmText='Отменить оплату'
-				onConfirm={async () => {
-					if (!unpayingExpense) return
-					await router.post(
-						`/lk/schedules/${unpayingExpense.id}/unpay`,
-						{ payment_id: unpayingExpense.payment_id },
-						{
-							preserveScroll: true,
-							onSuccess: () => {
-								setUnpayingExpense(null)
-								setUnpayOpen(false)
-								router.reload({ only: ['schedules'] })
-							}
-						}
-					)
-				}}
 			/>
 		</LkLayout>
 	)

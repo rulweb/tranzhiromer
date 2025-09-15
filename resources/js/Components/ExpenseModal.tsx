@@ -18,6 +18,7 @@ import {
 	getLocalTimeZone,
 	today
 } from '@internationalized/date'
+import dayjs from 'dayjs'
 import { X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
@@ -41,7 +42,6 @@ export type ExpenseModalProps = {
 	isOpen: boolean
 	onOpenChange: (v: boolean) => void
 	expense?: Schedule | null // Для редактирования
-	groupId?: number // Для создания
 	incomes: Schedule[]
 }
 
@@ -49,12 +49,12 @@ export default function ExpenseModal({
 	isOpen,
 	onOpenChange,
 	expense,
-	groupId,
 	incomes
 }: ExpenseModalProps) {
-	const { errors } = usePage().props as any
+	const { errors, month } = usePage().props as any
 	const [processing, setProcessing] = useState(false)
 	const [confirmOpen, setConfirmOpen] = useState(false)
+	const [payLeftover, setPayLeftover] = useState<string>('')
 
 	const isEditMode = Boolean(expense)
 
@@ -112,6 +112,13 @@ export default function ExpenseModal({
 				end_date: null,
 				is_cash_leftover: false
 			})
+		}
+		if (expense) {
+			setPayLeftover(
+				expense.expected_leftover != null
+					? String(expense.expected_leftover)
+					: '0'
+			)
 		}
 	}, [expense, isEditMode])
 
@@ -185,6 +192,36 @@ export default function ExpenseModal({
 
 	if (isEditMode && !expense) {
 		return null
+	}
+
+	const handlePay = async () => {
+		if (!expense) return
+		await router.post(
+			`/lk/schedules/${expense.id}/pay`,
+			{ leftover: payLeftover, month },
+			{
+				preserveScroll: true,
+				onSuccess: () => {
+					onOpenChange(false)
+					router.reload({ only: ['schedules'] })
+				}
+			}
+		)
+	}
+
+	const handleUnpay = async () => {
+		if (!expense) return
+		await router.post(
+			`/lk/schedules/${expense.id}/unpay`,
+			{ payment_id: (expense as any).payment_id },
+			{
+				preserveScroll: true,
+				onSuccess: () => {
+					onOpenChange(false)
+					router.reload({ only: ['schedules'] })
+				}
+			}
+		)
 	}
 
 	return (
@@ -358,7 +395,7 @@ export default function ExpenseModal({
 							)}
 
 							{periodFields !== 'one_time' && (
-								<>
+								<div className='relative'>
 									<DatePicker
 										label='Дата окончания'
 										value={formData.end_date ?? undefined}
@@ -368,56 +405,92 @@ export default function ExpenseModal({
 										minValue={today(getLocalTimeZone())}
 										pageBehavior='single'
 										visibleMonths={2}
-										endContent={
-											formData.end_date ? (
-												<Button
-													variant='light'
-													isIconOnly
-													onPress={() => handleChange('end_date', null)}
-												>
-													<X />
-												</Button>
-											) : (
-												<></>
-											)
-										}
 									/>
-								</>
+									{formData.end_date && (
+										<Button
+											isIconOnly
+											size='sm'
+											variant='light'
+											className='absolute right-9 top-9 -translate-y-1/2'
+											onPress={() => handleChange('end_date', null)}
+										>
+											<X size={16} />
+										</Button>
+									)}
+								</div>
 							)}
-						</ModalBody>
 
-						<ModalFooter>
-							<Button
-								variant='flat'
-								onPress={close}
-								disabled={processing}
-							>
-								Отмена
-							</Button>
-							{isEditMode && (
-								<>
-									<div className='flex-1' />
-									<Button
-										color='danger'
-										variant='bordered'
-										onPress={() => {
-											if (processing) return
-											setConfirmOpen(true)
-										}}
-										disabled={processing}
-									>
-										Удалить
-									</Button>
-								</>
-							)}
-							<Button
-								color='primary'
-								type='submit'
-								isLoading={processing}
-							>
-								{isEditMode ? 'Сохранить' : 'Создать'}
-							</Button>
-						</ModalFooter>
+							<div className='flex justify-between gap-3'>
+								<Button
+									variant='flat'
+									onPress={close}
+									disabled={processing}
+								>
+									Отмена
+								</Button>
+								{isEditMode && (
+									<>
+										<div className='flex-1' />
+										<Button
+											color='danger'
+											variant='bordered'
+											onPress={() => {
+												if (processing) return
+												setConfirmOpen(true)
+											}}
+											disabled={processing}
+										>
+											Удалить
+										</Button>
+									</>
+								)}
+								<Button
+									color='primary'
+									type='submit'
+									isLoading={processing}
+								>
+									{isEditMode ? 'Сохранить' : 'Создать'}
+								</Button>
+							</div>
+							<div>
+								{isEditMode && expense && (
+									<div className='m-2 border-t border-default-200 pt-3'>
+										<div className='text-xs uppercase text-foreground-500 mb-2'>
+											Статус оплаты на {dayjs(expense.day).format('MMMM YYYY')}
+										</div>
+										{expense.is_paid ? (
+											<div className='flex items-center justify-between gap-3'>
+												<div className='text-sm text-success'>Оплачено</div>
+												<Button
+													color='warning'
+													variant='flat'
+													onPress={handleUnpay}
+												>
+													Отменить оплату
+												</Button>
+											</div>
+										) : (
+											<div className='flex flex-col sm:flex-row sm:items-end gap-3'>
+												<Input
+													label='Остаток'
+													type='number'
+													step='0.01'
+													value={payLeftover}
+													onChange={e => setPayLeftover(e.target.value)}
+												/>
+												<Button
+													color='success'
+													variant='flat'
+													onPress={handlePay}
+												>
+													Оплатить
+												</Button>
+											</div>
+										)}
+									</div>
+								)}
+							</div>
+						</ModalBody>
 					</form>
 				)}
 			</ModalContent>

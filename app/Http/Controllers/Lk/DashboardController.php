@@ -94,6 +94,7 @@ class DashboardController extends Controller
                 $p = $getPayment($s);
                 $item = [
                     ...$s->toArray(),
+                    'day' => Carbon::create($monthCarbon->year, $monthCarbon->month, (int) $dayNum),
                     'amount' => (float) $s->amount,
                     'expected_leftover' => $s->expected_leftover !== null ? (float) $s->expected_leftover : 0.0,
                     'payment_id' => $p?->id,
@@ -117,11 +118,8 @@ class DashboardController extends Controller
             // Push a section per income keeping backward compatibility by nesting under days_by_income
             $groups[] = [
                 'income' => [
-                    'id' => $income->id,
-                    'name' => $income->name,
+                    ...$income->toArray(),
                     'amount' => (float) $income->amount,
-                    'description' => $income->description,
-                    'icon' => $income->icon,
                 ],
                 'days' => $incomeGroups,
             ];
