@@ -5,7 +5,9 @@ namespace App\Providers;
 use App\Models\Correction;
 use App\Models\Group;
 use App\Models\Schedule;
+use App\Models\User;
 use App\Observers\GroupObserver;
+use App\Observers\UserObserver;
 use App\Policies\CorrectionPolicy;
 use App\Policies\GroupPolicy;
 use App\Policies\SchedulePolicy;
@@ -47,6 +49,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Correction::class, CorrectionPolicy::class);
 
         // Model Observers
+        User::observe(UserObserver::class);
         Group::observe(GroupObserver::class);
     }
 }
