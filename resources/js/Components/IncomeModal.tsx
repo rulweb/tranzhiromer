@@ -40,14 +40,12 @@ export type IncomeModalProps = {
 	isOpen: boolean
 	onOpenChange: (v: boolean) => void
 	income?: Schedule | null // if provided -> edit mode
-	groupId?: number // required for create
 }
 
 export default function IncomeModal({
 	isOpen,
 	onOpenChange,
-	income,
-	groupId
+	income
 }: IncomeModalProps) {
 	const { errors } = usePage().props as any
 	const [processing, setProcessing] = useState(false)
@@ -129,22 +127,18 @@ export default function IncomeModal({
 				preserveScroll: true
 			})
 		} else {
-			router.post(
-				'/lk/schedules',
-				{ ...submitData, type: 'income', group_id: groupId } as any,
-				{
-					onSuccess: () => {
-						onOpenChange(false)
-						router.reload({ only: ['schedules'] })
-					},
-					onFinish: () => setProcessing(false),
-					preserveScroll: true
-				}
-			)
+			router.post('/lk/schedules', { ...submitData, type: 'income' } as any, {
+				onSuccess: () => {
+					onOpenChange(false)
+					router.reload({ only: ['schedules'] })
+				},
+				onFinish: () => setProcessing(false),
+				preserveScroll: true
+			})
 		}
 	}
 
-	if (!isEditMode && !groupId) {
+	if (!isEditMode) {
 		return null
 	}
 

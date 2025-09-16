@@ -78,6 +78,7 @@ class Schedule extends Model
         'amount',
         'expected_leftover',
         'end_date',
+        'is_cash_leftover',
     ];
 
     protected $casts = [
@@ -86,6 +87,7 @@ class Schedule extends Model
         'end_date' => 'date',
         'single_date' => 'date',
         'is_credit' => 'boolean',
+        'is_cash_leftover' => 'boolean',
     ];
 
     public function group(): BelongsTo

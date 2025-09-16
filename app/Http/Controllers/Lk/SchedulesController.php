@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Lk;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Lk\Schedules\PayScheduleRequest;
-use App\Http\Requests\Lk\Schedules\SchedulesIndexRequest;
 use App\Http\Requests\Lk\Schedules\StoreScheduleRequest;
 use App\Http\Requests\Lk\Schedules\UnpayScheduleRequest;
 use App\Http\Requests\Lk\Schedules\UpdateScheduleRequest;
@@ -14,8 +13,6 @@ use App\Models\SchedulePayment;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
-use Inertia\Inertia;
-use Inertia\Response as InertiaResponse;
 
 class SchedulesController extends Controller
 {
@@ -84,8 +81,6 @@ class SchedulesController extends Controller
             [
                 'paid_at' => now(),
                 'leftover' => $data['leftover'],
-                // For now, default to false; can be extended to accept from request
-                'is_cash_leftover' => false,
             ]
         );
 

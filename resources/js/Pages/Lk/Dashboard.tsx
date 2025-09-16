@@ -2,35 +2,51 @@ import { Button, Card, CardBody, CardHeader } from '@heroui/react'
 import { Head, router } from '@inertiajs/react'
 import dayjs from 'dayjs'
 import { Pencil } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import ExpenseModal from '../../Components/ExpenseModal'
 import IncomeModal from '../../Components/IncomeModal'
-import MoveExpenseModal from '../../Components/MoveExpenseModal'
 import ScheduleRow from '../../Components/ScheduleRow'
 import LkLayout from '../../Layouts/LkLayout'
 
 import { Schedule } from '@/types'
 
-type DayGroup = { day: string; items: Schedule[] }
+type DayGroup = {
+	day: string
+	expenses_sum: number
+	leftover_cash: number
+	leftover_credit: number
+	leftover: number
+	items: Schedule[]
+}
 
 type IncomeDaysItem = {
 	income: Schedule
+	expenses_sum: number
+	leftover_cash: number
+	leftover_credit: number
+	leftover: number
+	days: DayGroup[]
+}
+
+type UnassignedDaysItem = {
+	expenses_sum: number
+	leftover_cash: number
+	leftover_credit: number
 	days: DayGroup[]
 }
 
 type Props = {
-	schedules: Schedule[]
+	unassignedDays: UnassignedDaysItem
 	incomeDays: IncomeDaysItem[]
 	month: string
 }
 
 export default function Dashboard({
-	schedules: initial,
+	unassignedDays,
 	incomeDays,
 	month: initialMonth
 }: Props) {
-	const [schedules, setSchedules] = useState<Schedule[]>(initial)
 	const [month, setMonth] = useState<string>(
 		initialMonth || dayjs().format('YYYY-MM')
 	)
@@ -41,47 +57,16 @@ export default function Dashboard({
 	const [editExpenseOpen, setEditExpenseOpen] = useState<boolean>(false)
 	const [editingExpense, setEditingExpense] = useState<Schedule | null>(null)
 
-	// Keep schedules in sync with server props when they change
 	useEffect(() => {
-		setSchedules(initial)
-	}, [initial])
-
-	// Refetch via Inertia when month changes (for the same group)
-	const didMountRef = useRef(false)
-	useEffect(() => {
-		if (!didMountRef.current) {
-			didMountRef.current = true
-			return
-		}
 		router.visit(`/lk?month=${month}`, {
 			preserveScroll: true,
 			preserveState: true
 		})
 	}, [month])
 
-	// Client-side grouping by incomes is not needed for daily output anymore.
 	const incomes = useMemo(
-		() => schedules.filter(s => s.type === 'income'),
-		[schedules]
-	)
-	const expensesByParent = useMemo(() => {
-		const map = new Map<number, Schedule[]>()
-		schedules
-			.filter(s => s.type === 'expense')
-			.forEach(e => {
-				const key = e.parent_id || 0
-				map.set(key, [...(map.get(key) || []), e])
-			})
-		return map
-	}, [schedules])
-
-	const unassigned = useMemo(
-		() => expensesByParent.get(0) || [],
-		[expensesByParent]
-	)
-	const unassignedTotal = useMemo(
-		() => unassigned.reduce((sum, e) => sum + Number(e.amount), 0),
-		[unassigned]
+		() => incomeDays.map(section => section.income),
+		[incomeDays]
 	)
 
 	const renderByDays = () => (
@@ -95,64 +80,18 @@ export default function Dashboard({
 						<div className='text-base font-semibold'>{section.income.name}</div>
 						<div className='flex flex-col lg:flex-row flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600'>
 							<span className='font-medium text-success'>
-								Доход: {Number(section.income.amount).toLocaleString('ru-RU')} ₽
+								Доход: {section.income.amount.toLocaleString('ru-RU')} ₽
 							</span>
 							<span className='font-medium text-danger'>
-								Расходы:{' '}
-								{Number(
-									section.days.reduce(
-										(sum, day) =>
-											sum +
-											day.items.reduce(
-												(daySum, item) => daySum + item.amount,
-												0
-											),
-										0
-									)
-								).toLocaleString('ru-RU')}{' '}
-								₽
+								Расходы: {section.expenses_sum.toLocaleString('ru-RU')} ₽
 							</span>
 							<span className='font-medium text-warning'>
 								Остаток кредитных:{' '}
-								{Number(
-									section.income.amount -
-										section.days.reduce(
-											(sum, day) =>
-												sum +
-												day.items
-													.filter(item => !item.is_cash_leftover)
-													.reduce(
-														(daySum, item) =>
-															daySum +
-															item.amount -
-															(item.leftover || item.expected_leftover || 0),
-														0
-													),
-											0
-										)
-								).toLocaleString('ru-RU')}{' '}
-								₽
+								{section.leftover_credit.toLocaleString('ru-RU')} ₽
 							</span>
 							<span className='font-medium text-warning'>
 								Остаток наличных:{' '}
-								{Number(
-									section.income.amount -
-										section.days.reduce(
-											(sum, day) =>
-												sum +
-												day.items
-													.filter(item => item.is_cash_leftover)
-													.reduce(
-														(daySum, item) =>
-															daySum +
-															item.amount -
-															(item.leftover || item.expected_leftover || 0),
-														0
-													),
-											0
-										)
-								).toLocaleString('ru-RU')}{' '}
-								₽
+								{section.leftover_cash.toLocaleString('ru-RU')} ₽
 							</span>
 						</div>
 						<span className='font-medium text-warning'>
@@ -276,31 +215,42 @@ export default function Dashboard({
 				</div>
 			</div>
 
-			{/* Unassigned section kept for organizational view if needed; can be revisited later. */}
-			{unassigned.length > 0 && (
+			{unassignedDays.days.length > 0 && (
 				<div className='mb-4'>
 					<div className='rounded-lg border border-red-200 dark:border-red-900 bg-red-50/60 dark:bg-red-900/20 p-3'>
-						<div className='mb-2 flex items-center justify-between'>
-							<div className='text-sm font-semibold text-red-700 dark:text-red-300'>
+						<div className='mb-2 flex flex-col lg:flex-row items-center justify-between'>
+							<div className='mb-4 text-sm font-semibold text-red-700 dark:text-red-300'>
 								Нераспределённые платежи
 							</div>
-							<div className='text-xs text-red-600 dark:text-red-300'>
-								{unassigned.length} шт ·{' '}
-								{unassignedTotal.toLocaleString('ru-RU')} ₽
+							<div className='flex flex-col lg:flex-row flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600'>
+								<span className='font-medium text-danger'>
+									Расходы: {unassignedDays.expenses_sum.toLocaleString('ru-RU')}{' '}
+									₽
+								</span>
+								<span className='font-medium text-warning'>
+									Остаток кредитных:{' '}
+									{unassignedDays.leftover_credit.toLocaleString('ru-RU')} ₽
+								</span>
+								<span className='font-medium text-warning'>
+									Остаток наличных:{' '}
+									{unassignedDays.leftover_cash.toLocaleString('ru-RU')} ₽
+								</span>
 							</div>
 						</div>
 						<div className='flex flex-col gap-2'>
-							{unassigned.map(e => (
-								<ScheduleRow
-									key={e.id}
-									schedule={e}
-									isExpense
-									onEdit={s => {
-										setEditingExpense(s)
-										setEditExpenseOpen(true)
-									}}
-								/>
-							))}
+							{unassignedDays.days.map(dg =>
+								dg.items.map(s => (
+									<ScheduleRow
+										key={s.id}
+										schedule={s}
+										isExpense
+										onEdit={es => {
+											setEditingExpense(es)
+											setEditExpenseOpen(true)
+										}}
+									/>
+								))
+							)}
 						</div>
 					</div>
 				</div>
@@ -311,7 +261,6 @@ export default function Dashboard({
 			<IncomeModal
 				isOpen={createIncomeOpen}
 				onOpenChange={setCreateIncomeOpen}
-				groupId={schedules[0]?.group_id ?? 0}
 			/>
 			<IncomeModal
 				isOpen={editIncomeOpen}
