@@ -1,0 +1,38 @@
+name: TranzhiroMer Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-group
+      cancel-in-progress: true
+
+    steps:
+      - name: Build image
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd ~/tranzhiromer
+            git restore .
+            git pull
+            docker compose up --build -d
+
+            docker compose exec web composer install --optimize-autoloader
+            docker compose exec web php artisan migrate --force
+            docker compose exec web npm run build
+
+            docker compose exec web php artisan cache:clear
+            docker compose exec web php artisan config:cache
+            docker compose exec web php artisan route:cache
+            docker compose exec web php artisan view:cache
+
+            docker buildx prune -f
